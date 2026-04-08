@@ -50,6 +50,7 @@ Route::get('/clases/{id_clase}/asistencia', [TrainerController::class, 'attendan
 // Rutas de administrador
 // /admin/clases POST: crea una nueva clase
 // /admin/usuarios/{id_usuario}/rol PUT: cambia el rol de un usuario
+// /admin/informes GET: KPIs de estadísticas de uso
 Route::post('/admin/clases', [AdminClassController::class, 'store'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
