@@ -406,8 +406,22 @@ php artisan test
 | **PHP**        | 8.3     | Lenguaje de programación del backend          |
 | **PostgreSQL** | 17      | Base de datos relacional                      |
 | **Sanctum**    | 4.x     | Autenticación stateless con tokens (PAT)      |
+| **Scramble**   | 0.13.x  | Documentación OpenAPI automática              |
 | **Docker**     | —       | Contenedorización del entorno de desarrollo   |
 | **Composer**   | 2.x     | Gestor de dependencias de PHP                 |
+
+---
+
+## Documentación de la API (OpenAPI)
+
+La documentación se genera automáticamente a partir del código gracias a [Scramble](https://scramble.dedoc.co/). No hace falta escribir anotaciones manuales.
+
+| Recurso                 | URL                                           |
+| ----------------------- | --------------------------------------------- |
+| Visor interactivo       | `http://localhost:8000/docs/api`              |
+| Especificación JSON     | `http://localhost:8000/docs/api.json`         |
+
+El esquema de seguridad Bearer (Sanctum) ya está declarado en la spec, así que desde el visor se puede introducir el token y probar los endpoints directamente.
 
 ---
 
