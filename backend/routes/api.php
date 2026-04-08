@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])
@@ -8,3 +9,6 @@ Route::post('/login', [AuthController::class, 'login'])
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth:sanctum');
+
+Route::post('/reservas', [ReservationController::class, 'store'])
+    ->middleware(['auth:sanctum', 'role:cliente']);
