@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Sala;
+use App\Models\Usuario;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreClassRequest extends FormRequest
 {
@@ -36,6 +38,29 @@ class StoreClassRequest extends FormRequest
             'id_sala'      => ['required', 'integer', 'exists:salas,id_sala'],
             'id_usuario'   => ['required', 'integer', 'exists:usuarios,id_usuario'],
             'id_actividad' => ['required', 'integer', 'exists:actividades,id_actividad'],
+        ];
+    }
+
+    /**
+     * Valido que el usuario asignado tenga rol Entrenador (id_rol = 2)
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator) {
+                if ($validator->errors()->has('id_usuario')) {
+                    return;
+                }
+
+                $usuario = Usuario::find($this->input('id_usuario'));
+
+                if ($usuario && $usuario->id_rol !== 2) {
+                    $validator->errors()->add(
+                        'id_usuario',
+                        'El usuario asignado debe tener el rol de Entrenador.'
+                    );
+                }
+            },
         ];
     }
 

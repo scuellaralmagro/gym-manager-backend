@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminClassController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TrainerController;
@@ -22,3 +24,9 @@ Route::get('/entrenador/agenda', [TrainerController::class, 'agenda'])
 
 Route::get('/clases/{id_clase}/asistencia', [TrainerController::class, 'attendance'])
     ->middleware(['auth:sanctum', 'role:entrenador']);
+
+Route::post('/admin/clases', [AdminClassController::class, 'store'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::put('/admin/usuarios/{id_usuario}/rol', [AdminUserController::class, 'updateRole'])
+    ->middleware(['auth:sanctum', 'role:admin']);
