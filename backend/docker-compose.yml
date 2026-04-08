@@ -1,0 +1,60 @@
+services:
+  # ── Laravel PHP Application ──────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gym_manager_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # ── Live-reload bind mounts ──────────────────────────────
+      # Mount the entire project for live code sync
+      - .:/var/www/html
+      # Preserve container-managed dirs (avoid host overwrite)
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: "${APP_KEY}"
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: 5432
+      DB_DATABASE: gym_manager_db
+      DB_USERNAME: gym_manager_admin
+      DB_PASSWORD: supersecurepassword
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    networks:
+      - gym_manager_network
+
+  # ── PostgreSQL Database ──────────────────────────────────────
+  pgsql:
+    image: postgres:17-alpine
+    container_name: gym_manager_pgsql
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: gym_manager_db
+      POSTGRES_USER: gym_manager_admin
+      POSTGRES_PASSWORD: supersecurepassword
+    volumes:
+      - gym_manager_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gym_manager_admin -d gym_manager_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gym_manager_network
+
+volumes:
+  gym_manager_pgdata:
+
+networks:
+  gym_manager_network:
+    driver: bridge
