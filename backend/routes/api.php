@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminClassController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TrainerController;
 use App\Http\Controllers\UserController;
@@ -53,4 +54,7 @@ Route::post('/admin/clases', [AdminClassController::class, 'store'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::put('/admin/usuarios/{id_usuario}/rol', [AdminUserController::class, 'updateRole'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::get('/admin/informes', [ReportController::class, 'kpis'])
     ->middleware(['auth:sanctum', 'role:admin']);
