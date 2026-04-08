@@ -9,6 +9,16 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    /**
+     * Obtener KPIs del gimnasio (Admin).
+     *
+     * Calcula tasa de ocupación promedio e índice de cancelaciones.
+     * Admite filtros opcionales por mes, año y actividad via query string.
+     *
+     * @queryParam mes int Filtrar por mes (1-12). Example: 4
+     * @queryParam anio int Filtrar por año. Example: 2026
+     * @queryParam actividad int Filtrar por id_actividad. Example: 1
+     */
     public function kpis(Request $request): JsonResponse
     {
         $mes       = $request->query('mes');

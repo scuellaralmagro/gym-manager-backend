@@ -13,6 +13,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminOverviewController extends Controller
 {
+    /**
+     * Listar todas las reservas (Admin).
+     *
+     * Devuelve todas las reservas del sistema con datos del cliente y la clase.
+     */
     public function reservas(): AnonymousResourceCollection
     {
         $reservas = Reserva::with(['usuario', 'clase.actividad', 'clase.sala'])
@@ -22,6 +27,11 @@ class AdminOverviewController extends Controller
         return AdminReservaResource::collection($reservas);
     }
 
+    /**
+     * Listar todas las clases (Admin).
+     *
+     * Devuelve las clases con entrenador, actividad, sala y recuento de reservas activas.
+     */
     public function clases(): AnonymousResourceCollection
     {
         // Incluyo el conteo de reservas activas para que el admin vea la ocupación
@@ -35,6 +45,11 @@ class AdminOverviewController extends Controller
         return AdminClaseResource::collection($clases);
     }
 
+    /**
+     * Listar todos los usuarios (Admin).
+     *
+     * Devuelve los usuarios del sistema con su rol, ordenados por rol y nombre.
+     */
     public function usuarios(): AnonymousResourceCollection
     {
         $usuarios = Usuario::with('rol')
@@ -45,6 +60,11 @@ class AdminOverviewController extends Controller
         return UsuarioResource::collection($usuarios);
     }
 
+    /**
+     * Cancelar cualquier reserva (Admin).
+     *
+     * Permite al administrador cancelar la reserva de cualquier usuario.
+     */
     public function cancelarReserva(int $id_reserva): JsonResponse
     {
         $reserva = Reserva::findOrFail($id_reserva);

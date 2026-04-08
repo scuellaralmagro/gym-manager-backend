@@ -10,7 +10,14 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // Inicio de sesión
+    /**
+     * Iniciar sesión.
+     *
+     * Autentica al usuario con email y contraseña, revoca tokens anteriores
+     * y devuelve un nuevo Personal Access Token (Sanctum).
+     *
+     * @unauthenticated
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         $usuario = Usuario::where('email', $request->email)->first();
@@ -32,7 +39,11 @@ class AuthController extends Controller
         ]);
     }
 
-    // Cierre de sesión
+    /**
+     * Cerrar sesión.
+     *
+     * Revoca el token utilizado en esta petición.
+     */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

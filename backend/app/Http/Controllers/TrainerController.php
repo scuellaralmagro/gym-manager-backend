@@ -13,6 +13,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TrainerController extends Controller
 {
+    /**
+     * Agenda del entrenador.
+     *
+     * Devuelve las clases futuras asignadas al entrenador autenticado,
+     * incluyendo sala, actividad y plazas disponibles.
+     */
     public function agenda(Request $request): AnonymousResourceCollection
     {
         // Obtenemos las clases del entrenador activo, con sus salas y actividades relacionadas,
@@ -28,6 +34,12 @@ class TrainerController extends Controller
         return ClaseResource::collection($clases);
     }
 
+    /**
+     * Consultar asistencia de una clase.
+     *
+     * Lista los clientes con reserva activa en la clase indicada.
+     * Solo el entrenador asignado puede consultar esta información (403 si no coincide).
+     */
     public function attendance(Request $request, int $id_clase): JsonResponse|AnonymousResourceCollection
     {
         $clase = Clase::find($id_clase);

@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class AdminClassController extends Controller
 {
+    /**
+     * Crear una clase (Admin).
+     *
+     * Registra una nueva sesión de clase asignándole sala, actividad, entrenador y horario.
+     */
     public function store(StoreClassRequest $request): JsonResponse
     {
         $clase = Clase::create($request->validated());
@@ -19,6 +24,11 @@ class AdminClassController extends Controller
         ], 201);
     }
 
+    /**
+     * Actualizar una clase (Admin).
+     *
+     * Modifica los datos de una clase existente. Soporta actualización parcial.
+     */
     public function update(UpdateClassRequest $request, int $id_clase): JsonResponse
     {
         $clase = Clase::findOrFail($id_clase);
@@ -30,6 +40,11 @@ class AdminClassController extends Controller
         ]);
     }
 
+    /**
+     * Eliminar una clase (Admin).
+     *
+     * Borra la clase y sus reservas asociadas (cascade).
+     */
     public function destroy(int $id_clase): JsonResponse
     {
         $clase = Clase::findOrFail($id_clase);

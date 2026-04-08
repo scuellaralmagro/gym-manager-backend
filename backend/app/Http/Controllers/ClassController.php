@@ -8,6 +8,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ClassController extends Controller
 {
+    /**
+     * Listar todas las clases.
+     *
+     * Devuelve las clases con actividad, sala y plazas disponibles.
+     * Accesible para cualquier usuario autenticado.
+     */
     public function index(): AnonymousResourceCollection
     {
         $clases = Clase::with(['actividad', 'sala'])

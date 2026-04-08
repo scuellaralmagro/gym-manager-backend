@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
+    /**
+     * Crear una reserva.
+     *
+     * Reserva una plaza en una clase para el cliente autenticado.
+     * Aplica control de duplicidad, validación temporal y bloqueo pesimista de aforo.
+     */
     public function store(StoreReservationRequest $request): JsonResponse
     {
         // Extraigo la identidad del token Sanctum, nunca del payload, para evitar suplantación
@@ -65,6 +71,12 @@ class ReservationController extends Controller
         ], 201);
     }
 
+    /**
+     * Listar mis reservas.
+     *
+     * Devuelve todas las reservas del cliente autenticado con los detalles
+     * de cada clase (actividad, sala, horario), ordenadas por fecha descendente.
+     */
     public function myReservations(Request $request): AnonymousResourceCollection
     {
         // Obtenemos las reservas del usuario activo, con sus clases y actividades relacionadas,
@@ -77,6 +89,12 @@ class ReservationController extends Controller
         return ReservaResource::collection($reservas);
     }
 
+    /**
+     * Cancelar una reserva propia.
+     *
+     * Cambia el estado de la reserva a 'Cancelada'. Solo puede cancelar
+     * reservas que pertenezcan al cliente autenticado.
+     */
     public function cancel(Request $request, int $id_reserva): JsonResponse
     {
         $reserva = Reserva::where('id_reserva', $id_reserva)
