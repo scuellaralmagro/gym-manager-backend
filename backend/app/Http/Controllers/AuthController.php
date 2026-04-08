@@ -10,10 +10,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    /**
-     * Verifico las credenciales de forma manual (sin sesión) para mantener la API
-     * completamente stateless, y emito un Personal Access Token de Sanctum.
-     */
+    // Inicio de sesión
     public function login(LoginRequest $request): JsonResponse
     {
         $usuario = Usuario::where('email', $request->email)->first();
@@ -35,10 +32,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Revoco exclusivamente el token que se usó en esta petición,
-     * sin afectar a otros dispositivos del mismo usuario.
-     */
+    // Cierre de sesión
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
