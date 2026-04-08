@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\TrainerController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])
@@ -15,3 +16,9 @@ Route::post('/reservas', [ReservationController::class, 'store'])
 
 Route::get('/reservas/mis-reservas', [ReservationController::class, 'myReservations'])
     ->middleware(['auth:sanctum', 'role:cliente']);
+
+Route::get('/entrenador/agenda', [TrainerController::class, 'agenda'])
+    ->middleware(['auth:sanctum', 'role:entrenador']);
+
+Route::get('/clases/{id_clase}/asistencia', [TrainerController::class, 'attendance'])
+    ->middleware(['auth:sanctum', 'role:entrenador']);
