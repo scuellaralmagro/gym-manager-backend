@@ -76,4 +76,23 @@ class ReservationController extends Controller
 
         return ReservaResource::collection($reservas);
     }
+
+    public function cancel(Request $request, int $id_reserva): JsonResponse
+    {
+        $reserva = Reserva::where('id_reserva', $id_reserva)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->firstOrFail();
+
+        if ($reserva->estado === 'Cancelada') {
+            return response()->json([
+                'message' => 'Esta reserva ya está cancelada.',
+            ], 409);
+        }
+
+        $reserva->update(['estado' => 'Cancelada']);
+
+        return response()->json([
+            'message' => 'Reserva cancelada correctamente.',
+        ]);
+    }
 }

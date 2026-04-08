@@ -181,10 +181,11 @@ La lógica se organiza en capas desacopladas:
 
 ### Cliente
 
-| Método | Ruta                        | Controlador                        | Middlewares                   |
-| ------ | --------------------------- | ---------------------------------- | ----------------------------- |
-| POST   | `/api/reservas`             | ReservationController@store        | auth:sanctum, role:cliente    |
-| GET    | `/api/reservas/mis-reservas`| ReservationController@myReservations | auth:sanctum, role:cliente  |
+| Método | Ruta                                | Controlador                          | Middlewares                |
+| ------ | ----------------------------------- | ------------------------------------ | -------------------------- |
+| POST   | `/api/reservas`                     | ReservationController@store          | auth:sanctum, role:cliente |
+| GET    | `/api/reservas/mis-reservas`        | ReservationController@myReservations | auth:sanctum, role:cliente |
+| PATCH  | `/api/reservas/{id}/cancelar`       | ReservationController@cancel         | auth:sanctum, role:cliente |
 
 ### Entrenador
 
@@ -195,14 +196,17 @@ La lógica se organiza en capas desacopladas:
 
 ### Administrador
 
-| Método | Ruta                              | Controlador                    | Middlewares                  |
-| ------ | --------------------------------- | ------------------------------ | ---------------------------- |
-| POST   | `/api/admin/clases`               | AdminClassController@store     | auth:sanctum, role:admin     |
-| PUT    | `/api/admin/usuarios/{id}/rol`    | AdminUserController@updateRole | auth:sanctum, role:admin     |
-| GET    | `/api/admin/informes`             | ReportController@kpis          | auth:sanctum, role:admin     |
-| GET    | `/api/admin/informes/pdf`         | PdfReportController@export     | auth:sanctum, role:admin     |
-
-> Los dos últimos endpoints de informes están pendientes de implementación.
+| Método | Ruta                                      | Controlador                              | Middlewares              |
+| ------ | ----------------------------------------- | ---------------------------------------- | ------------------------ |
+| POST   | `/api/admin/clases`                       | AdminClassController@store               | auth:sanctum, role:admin |
+| PUT    | `/api/admin/clases/{id}`                  | AdminClassController@update              | auth:sanctum, role:admin |
+| DELETE | `/api/admin/clases/{id}`                  | AdminClassController@destroy             | auth:sanctum, role:admin |
+| PUT    | `/api/admin/usuarios/{id}/rol`            | AdminUserController@updateRole           | auth:sanctum, role:admin |
+| GET    | `/api/admin/informes`                     | ReportController@kpis                    | auth:sanctum, role:admin |
+| GET    | `/api/admin/reservas`                     | AdminOverviewController@reservas         | auth:sanctum, role:admin |
+| GET    | `/api/admin/clases`                       | AdminOverviewController@clases           | auth:sanctum, role:admin |
+| GET    | `/api/admin/usuarios`                     | AdminOverviewController@usuarios         | auth:sanctum, role:admin |
+| PATCH  | `/api/admin/reservas/{id}/cancelar`       | AdminOverviewController@cancelarReserva  | auth:sanctum, role:admin |
 
 ---
 
@@ -271,23 +275,28 @@ backend/
 │   │   ├── Controllers/
 │   │   │   ├── AuthController.php          # Login / Logout
 │   │   │   ├── UserController.php          # Perfil del usuario
-│   │   │   ├── ClassController.php         # Listado de clases
-│   │   │   ├── ReservationController.php   # Crear reserva / Mis reservas
+│   │   │   ├── ClassController.php         # Listado de clases (con plazas)
+│   │   │   ├── ReservationController.php   # Crear / Cancelar reserva / Mis reservas
 │   │   │   ├── TrainerController.php       # Agenda / Asistencia
-│   │   │   ├── AdminClassController.php    # Crear clase (admin)
-│   │   │   └── AdminUserController.php     # Cambiar rol (admin)
+│   │   │   ├── AdminClassController.php    # CRUD de clases (admin)
+│   │   │   ├── AdminUserController.php     # Cambiar rol (admin)
+│   │   │   ├── AdminOverviewController.php # Vistas globales + cancelar reserva (admin)
+│   │   │   └── ReportController.php        # KPIs estadísticos (admin)
 │   │   ├── Middleware/
 │   │   │   └── CheckRole.php               # Middleware de control de roles
 │   │   ├── Requests/
 │   │   │   ├── LoginRequest.php
 │   │   │   ├── StoreReservationRequest.php
 │   │   │   ├── StoreClassRequest.php
+│   │   │   ├── UpdateClassRequest.php
 │   │   │   └── UpdateUserRoleRequest.php
 │   │   └── Resources/
 │   │       ├── ReservaResource.php
 │   │       ├── ClaseResource.php
 │   │       ├── AsistenciaResource.php
-│   │       └── UsuarioResource.php
+│   │       ├── UsuarioResource.php
+│   │       ├── AdminReservaResource.php
+│   │       └── AdminClaseResource.php
 │   ├── Models/
 │   │   ├── Rol.php
 │   │   ├── Sala.php
@@ -296,7 +305,7 @@ backend/
 │   │   ├── Clase.php
 │   │   └── Reserva.php
 │   └── Providers/
-│       └── AppServiceProvider.php          # Rate limiter para login
+│       └── AppServiceProvider.php          # Rate limiter + Scramble config
 ├── bootstrap/
 │   └── app.php                             # Registro del middleware de roles
 ├── config/

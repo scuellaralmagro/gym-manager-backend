@@ -20,6 +20,7 @@ class TrainerController extends Controller
         $clases = Clase::where('id_usuario', $request->user()->id_usuario)
             ->where('fecha', '>=', Carbon::today())
             ->with(['sala', 'actividad'])
+            ->withCount(['reservas as reservas_activas_count' => fn ($q) => $q->where('estado', 'Activa')])
             ->orderBy('fecha')
             ->orderBy('hora_inicio')
             ->get();
