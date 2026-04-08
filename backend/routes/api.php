@@ -12,3 +12,6 @@ Route::post('/logout', [AuthController::class, 'logout'])
 
 Route::post('/reservas', [ReservationController::class, 'store'])
     ->middleware(['auth:sanctum', 'role:cliente']);
+
+Route::get('/reservas/mis-reservas', [ReservationController::class, 'myReservations'])
+    ->middleware(['auth:sanctum', 'role:cliente']);

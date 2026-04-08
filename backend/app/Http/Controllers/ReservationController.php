@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservationRequest;
+use App\Http\Resources\ReservaResource;
 use App\Models\Clase;
 use App\Models\Reserva;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
@@ -60,5 +63,17 @@ class ReservationController extends Controller
             'message' => 'Reserva creada correctamente.',
             'reserva' => $reserva,
         ], 201);
+    }
+
+    public function myReservations(Request $request): AnonymousResourceCollection
+    {
+        // Obtenemos las reservas del usuario activo, con sus clases y actividades relacionadas,
+        // ordenadas por fecha de creación de la reserva.
+        $reservas = Reserva::where('id_usuario', $request->user()->id_usuario)
+            ->with(['clase.actividad', 'clase.sala'])
+            ->orderByDesc('fecha_creacion')
+            ->get();
+
+        return ReservaResource::collection($reservas);
     }
 }
