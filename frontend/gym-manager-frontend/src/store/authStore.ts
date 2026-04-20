@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+// Usamos Zustand (una librería de estado para React) para guardar el estado de la autenticación y el usuario autenticado.
+
 // Interfaces para guardar el estado de la autenticación y el usuario autenticado.
 // AuthUser: información del usuario autenticado.
 // AuthState: estado de la autenticación.
