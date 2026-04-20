@@ -19,9 +19,11 @@ Este módulo forma parte del Trabajo de Fin de Grado del ciclo de **Desarrollo d
 - [Esquema de base de datos](#esquema-de-base-de-datos)
 - [Autenticación](#autenticación)
 - [Sistema de roles y middlewares](#sistema-de-roles-y-middlewares)
+- [KPIs e informes](#kpis-e-informes)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Variables de entorno](#variables-de-entorno)
 - [Comandos útiles](#comandos-útiles)
+- [Documentación de la API (OpenAPI)](#documentación-de-la-api-openapi)
 - [Tecnologías utilizadas](#tecnologías-utilizadas)
 
 ---
@@ -266,6 +268,42 @@ Si el rol del usuario autenticado no coincide con el requerido, se devuelve un *
 
 ---
 
+## KPIs e informes
+
+El endpoint `GET /api/admin/informes` calcula y devuelve los indicadores clave de rendimiento del gimnasio. Todos los KPIs respetan los filtros opcionales `mes`, `anio` y `actividad` vía query string.
+
+### KPIs principales
+
+| KPI | Tipo | Descripción |
+| --- | ---- | ----------- |
+| `tasa_ocupacion_promedio` | `float` | Porcentaje de plazas ocupadas sobre el cupo total ofertado |
+| `indice_cancelaciones` | `float` | Porcentaje de reservas canceladas sobre el total de reservas |
+| `media_reservas_por_clase` | `float` | Promedio de reservas activas por cada clase programada |
+| `clientes_unicos` | `int` | Número de clientes distintos con al menos una reserva activa |
+| `actividad_mas_popular` | `object\|null` | Nombre de la actividad con más reservas activas y su recuento |
+| `hora_punta` | `object\|null` | Franja horaria con mayor demanda (hora de inicio y recuento) |
+
+### Desglose
+
+| Campo | Descripción |
+| ----- | ----------- |
+| `total_clases` | Número de clases programadas en el periodo |
+| `cupo_total` | Suma de plazas ofertadas |
+| `reservas_activas` | Reservas en estado "Activa" |
+| `reservas_canceladas` | Reservas en estado "Cancelada" |
+| `total_reservas` | Suma de activas + canceladas |
+
+### Ejemplo de petición
+
+```bash
+curl http://localhost:8000/api/admin/informes?mes=4&anio=2026 \
+  -H "Authorization: Bearer <token>"
+```
+
+> Todos los cálculos incluyen protección contra divisiones por cero, devolviendo `0` o `null` cuando no hay datos.
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -423,7 +461,7 @@ php artisan test
 
 ## Documentación de la API (OpenAPI)
 
-La documentación se genera automáticamente a partir del código gracias a [Scramble](https://scramble.dedoc.co/). No hace falta escribir anotaciones manuales.
+La documentación se genera automáticamente gracias a [Scramble](https://scramble.dedoc.co/), que analiza los tipos de retorno, Form Requests y PHPDoc de cada controlador. Cada endpoint incluye bloques `/** ... */` con resumen y descripción que Scramble traduce a la especificación OpenAPI.
 
 | Recurso                 | URL                                           |
 | ----------------------- | --------------------------------------------- |
@@ -431,6 +469,8 @@ La documentación se genera automáticamente a partir del código gracias a [Scr
 | Especificación JSON     | `http://localhost:8000/docs/api.json`         |
 
 El esquema de seguridad Bearer (Sanctum) ya está declarado en la spec, así que desde el visor se puede introducir el token y probar los endpoints directamente.
+
+> **Acceso restringido en producción:** Se ha configurado un Gate (`viewApiDocs`) en `AppServiceProvider` para que solo los administradores puedan acceder a la documentación cuando `APP_ENV=production`.
 
 ---
 
