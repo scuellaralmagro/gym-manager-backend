@@ -84,6 +84,12 @@ Route::delete('/admin/clases/{id_clase}', [AdminClassController::class, 'destroy
 Route::put('/admin/usuarios/{id_usuario}/rol', [AdminUserController::class, 'updateRole'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
+Route::put('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'update'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::delete('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
 Route::get('/admin/informes', [ReportController::class, 'kpis'])
     ->middleware(['auth:sanctum', 'role:admin']);
 

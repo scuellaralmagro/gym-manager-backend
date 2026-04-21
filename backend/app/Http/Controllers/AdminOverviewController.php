@@ -9,6 +9,7 @@ use App\Models\Clase;
 use App\Models\Reserva;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminOverviewController extends Controller
@@ -48,14 +49,37 @@ class AdminOverviewController extends Controller
     /**
      * Listar todos los usuarios (Admin).
      *
-     * Devuelve los usuarios del sistema con su rol, ordenados por rol y nombre.
+     * Soporta paginación y filtros server-side (q, id_rol) para que la tabla
+     * del frontend no arrastre miles de filas en cada render.
      */
-    public function usuarios(): AnonymousResourceCollection
+    public function usuarios(Request $request): AnonymousResourceCollection
     {
-        $usuarios = Usuario::with('rol')
+        $perPage = (int) $request->query('per_page', 10);
+        // Limito el rango de per_page para que un cliente malicioso no pueda
+        // pedir cargas enormes (10k filas) y tumbar la base de datos.
+        $perPage = max(1, min($perPage, 50));
+
+        $search = trim((string) $request->query('q', ''));
+        $idRol  = $request->query('id_rol');
+
+        $query = Usuario::with('rol')
             ->orderBy('id_rol')
-            ->orderBy('nombre')
-            ->get();
+            ->orderBy('nombre');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $like = '%'.$search.'%';
+                $q->where('nombre', 'ilike', $like)
+                  ->orWhere('apellidos', 'ilike', $like)
+                  ->orWhere('email', 'ilike', $like);
+            });
+        }
+
+        if ($idRol !== null && $idRol !== '') {
+            $query->where('id_rol', (int) $idRol);
+        }
+
+        $usuarios = $query->paginate($perPage)->withQueryString();
 
         return UsuarioResource::collection($usuarios);
     }

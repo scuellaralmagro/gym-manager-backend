@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import CookieConsent from "./components/CookieConsent";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ROLE_ADMIN, ROLE_CLIENTE, ROLE_ENTRENADOR } from "./config/navigation";
+import UserManagement from "./features/admin/UserManagement";
 import LoginPage from "./features/auth/Login";
 import MainLayout from "./layouts/MainLayout";
 import { useAuthStore } from "./store/authStore";
@@ -95,10 +96,7 @@ function App() {
           }
         >
           <Route index element={<Placeholder title="Dashboard" />} />
-          <Route
-            path="usuarios"
-            element={<Placeholder title="Gestión de usuarios" />}
-          />
+          <Route path="usuarios" element={<UserManagement />} />
           <Route
             path="clases"
             element={<Placeholder title="Gestión de oferta / clases" />}
