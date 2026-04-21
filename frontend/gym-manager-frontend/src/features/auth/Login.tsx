@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import api, { AUTH_TOKEN_STORAGE_KEY } from "../../lib/axios";
+import { handleLaravelErrors } from "../../lib/handleLaravelErrors";
 import { cn } from "../../lib/utils";
 import { useAuthStore, type AuthUser } from "../../store/authStore";
 
@@ -84,30 +85,22 @@ export default function Login() {
       login(user);
       navigate(DASHBOARD_BY_ROLE[idRol] ?? "/", { replace: true });
     } catch (error) {
-      if (isAxiosError(error)) {
-        const status = error.response?.status;
+      // Si hay un error 422, lo manejamos con la funcion handleLaravelErrors
+      if (
+        handleLaravelErrors(error, setError, {
+          allowedFields: ["email", "password"],
+        })
+      ) {
+        return;
+      }
+
+      if (isAxiosError(error) && error.response?.status === 401) {
         const message = error.response?.data?.message as string | undefined;
-
-        if (status === 422) {
-          const fieldErrors = (error.response?.data?.errors ?? {}) as Record<
-            string,
-            string[]
-          >;
-          for (const [field, messages] of Object.entries(fieldErrors)) {
-            if (field === "email" || field === "password") {
-              setError(field, { type: "server", message: messages[0] });
-            }
-          }
-          return;
-        }
-
-        if (status === 401) {
-          setError("password", {
-            type: "server",
-            message: message ?? "Credenciales incorrectas.",
-          });
-          return;
-        }
+        setError("password", {
+          type: "server",
+          message: message ?? "Credenciales incorrectas.",
+        });
+        return;
       }
 
       setError("root", {

@@ -259,7 +259,6 @@ function TopNavbar({
         </div>
       </div>
 
-      {/* Menú desplegable móvil */}
       {mobileOpen && (
         <div className="border-t border-[#e0e2e6] bg-white md:hidden">
           <nav className="space-y-1 px-3 py-3">

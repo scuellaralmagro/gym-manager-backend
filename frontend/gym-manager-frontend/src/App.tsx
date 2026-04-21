@@ -6,6 +6,7 @@ import LoginPage from "./features/auth/Login";
 import MainLayout from "./layouts/MainLayout";
 import { useAuthStore } from "./store/authStore";
 
+// Placeholder temporal mientras no existan las páginas reales en /features.
 function Placeholder({ title }: { title: string }) {
   return (
     <section>
