@@ -9,7 +9,7 @@ import {
   type ToastVariant,
 } from "./toast-context";
 
-// Sistema de notificaciones "toast"
+// Sistema de notificaciones "toast" (aparecen en la parte superior derecha de la pantalla)
 
 // Duración por defecto de 4 segundos
 const DEFAULT_DURATION_MS = 4000;
