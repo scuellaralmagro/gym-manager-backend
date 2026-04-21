@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
+import CookieConsent from "./components/CookieConsent";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ROLE_ADMIN, ROLE_CLIENTE, ROLE_ENTRENADOR } from "./config/navigation";
 import LoginPage from "./features/auth/Login";
@@ -114,6 +115,7 @@ function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <CookieConsent />
     </BrowserRouter>
   );
 }
