@@ -1,15 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import LoginPage from "./features/auth/Login";
 import { useAuthStore } from "./store/authStore";
 
 const ROLE_ADMIN = 1;
 const ROLE_ENTRENADOR = 2;
 const ROLE_CLIENTE = 3;
-
-function LoginPage() {
-  return <h1>Login (placeholder)</h1>;
-}
 
 function ClienteLayout() {
   return <h1>Zona Cliente (placeholder)</h1>;
