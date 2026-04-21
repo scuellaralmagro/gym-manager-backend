@@ -156,6 +156,7 @@ export function DropdownMenuItem({
         destructive
           ? "text-[#b3261e] hover:bg-[#fdecea]"
           : "text-[rgba(4,14,32,0.85)] hover:bg-[#f1f5f9]",
+        "disabled:pointer-events-none disabled:text-[rgba(4,14,32,0.45)]",
         className,
       )}
       {...props}

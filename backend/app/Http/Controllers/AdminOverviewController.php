@@ -17,13 +17,44 @@ class AdminOverviewController extends Controller
     /**
      * Listar todas las reservas (Admin).
      *
-     * Devuelve todas las reservas del sistema con datos del cliente y la clase.
+     * Soporta paginación y filtros server-side (q, estado, id_clase).
      */
-    public function reservas(): AnonymousResourceCollection
+    public function reservas(Request $request): AnonymousResourceCollection
     {
-        $reservas = Reserva::with(['usuario', 'clase.actividad', 'clase.sala'])
-            ->orderByDesc('fecha_creacion')
-            ->get();
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = max(1, min($perPage, 50));
+
+        $search   = trim((string) $request->query('q', ''));
+        $estado   = $request->query('estado');
+        $idClase  = $request->query('id_clase');
+
+        $query = Reserva::with(['usuario', 'clase.actividad', 'clase.sala'])
+            ->orderByDesc('fecha_creacion');
+
+        if ($search !== '') {
+            $like = '%'.$search.'%';
+            $query->where(function ($outer) use ($like) {
+                $outer
+                    ->whereHas('usuario', function ($q) use ($like) {
+                        $q->where('nombre', 'ilike', $like)
+                          ->orWhere('apellidos', 'ilike', $like)
+                          ->orWhere('email', 'ilike', $like);
+                    })
+                    ->orWhereHas('clase.actividad', function ($q) use ($like) {
+                        $q->where('nombre', 'ilike', $like);
+                    });
+            });
+        }
+
+        if (in_array($estado, ['Activa', 'Cancelada'], true)) {
+            $query->where('estado', $estado);
+        }
+
+        if ($idClase !== null && $idClase !== '') {
+            $query->where('id_clase', (int) $idClase);
+        }
+
+        $reservas = $query->paginate($perPage)->withQueryString();
 
         return AdminReservaResource::collection($reservas);
     }
