@@ -31,17 +31,50 @@ class AdminOverviewController extends Controller
     /**
      * Listar todas las clases (Admin).
      *
-     * Devuelve las clases con entrenador, actividad, sala y recuento de reservas activas.
+     * Soporta paginación, filtros (fecha_desde, fecha_hasta, id_usuario) y
+     * ordenación server-side para que la tabla del admin escale cuando la
+     * oferta crezca y no arrastre miles de filas en cada render.
      */
-    public function clases(): AnonymousResourceCollection
+    public function clases(Request $request): AnonymousResourceCollection
     {
-        // Incluyo el conteo de reservas activas para que el admin vea la ocupación
-        // de cada clase sin necesidad de una segunda petición
-        $clases = Clase::with(['entrenador', 'actividad', 'sala'])
-            ->withCount(['reservas as reservas_activas_count' => fn ($q) => $q->where('estado', 'Activa')])
-            ->orderBy('fecha')
-            ->orderBy('hora_inicio')
-            ->get();
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = max(1, min($perPage, 50));
+
+        $fechaDesde = $request->query('fecha_desde');
+        $fechaHasta = $request->query('fecha_hasta');
+        $idUsuario  = $request->query('id_usuario');
+
+        // Whitelist de columnas ordenables para evitar inyecciones de SQL
+        $allowedSorts = ['fecha', 'hora_inicio', 'cupo_maximo'];
+        $sort = $request->query('sort', 'fecha');
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'fecha';
+        }
+        $direction = strtolower((string) $request->query('direction', 'asc')) === 'desc'
+            ? 'desc'
+            : 'asc';
+
+        $query = Clase::with(['entrenador', 'actividad', 'sala'])
+            ->withCount(['reservas as reservas_activas_count' => fn ($q) => $q->where('estado', 'Activa')]);
+
+        if ($fechaDesde) {
+            $query->whereDate('fecha', '>=', $fechaDesde);
+        }
+
+        if ($fechaHasta) {
+            $query->whereDate('fecha', '<=', $fechaHasta);
+        }
+
+        if ($idUsuario !== null && $idUsuario !== '') {
+            $query->where('id_usuario', (int) $idUsuario);
+        }
+
+        $query->orderBy($sort, $direction);
+        if ($sort !== 'hora_inicio') {
+            $query->orderBy('hora_inicio');
+        }
+
+        $clases = $query->paginate($perPage)->withQueryString();
 
         return AdminClaseResource::collection($clases);
     }

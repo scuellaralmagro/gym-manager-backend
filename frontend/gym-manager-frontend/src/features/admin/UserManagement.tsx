@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { Input } from "../../components/ui/input";
+import { useConfirm } from "../../components/ui/use-confirm";
+import { useToast } from "../../components/ui/use-toast";
 import api from "../../lib/axios";
 import { cn } from "../../lib/utils";
 import {
@@ -75,6 +77,8 @@ async function fetchUsuarios({
 
 export default function UserManagement() {
   const queryClient = useQueryClient();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [idRol, setIdRol] = useState<number | null>(null);
@@ -86,21 +90,25 @@ export default function UserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "usuarios"] });
+      toast.success("Usuario eliminado");
     },
     onError: (error: unknown) => {
-      // Manejo de errores al eliminar un usuario
       const message =
         isAxiosError(error) && typeof error.response?.data?.message === "string"
           ? error.response.data.message
           : "No se pudo eliminar el usuario.";
-      window.alert(message);
+      toast.error("No se pudo eliminar", message);
     },
   });
 
-  const handleDelete = (usuario: Usuario) => {
-    const ok = window.confirm(
-      `¿Eliminar al usuario "${usuario.nombre} ${usuario.apellidos}"? Esta acción no se puede deshacer.`,
-    );
+  const handleDelete = async (usuario: Usuario) => {
+    const ok = await confirm({
+      title: `Eliminar a ${usuario.nombre} ${usuario.apellidos}`,
+      description:
+        "Esta acción es irreversible. Si el usuario es entrenador con clases asignadas, el borrado será rechazado.",
+      confirmLabel: "Eliminar",
+      variant: "destructive",
+    });
     if (!ok) return;
     deleteMutation.mutate(usuario.id_usuario);
   };

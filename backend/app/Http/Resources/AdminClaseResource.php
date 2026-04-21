@@ -21,6 +21,8 @@ class AdminClaseResource extends JsonResource
                 'nombre'     => $this->entrenador->nombre,
                 'apellidos'  => $this->entrenador->apellidos,
             ],
+            'id_sala'         => $this->id_sala,
+            'id_actividad'    => $this->id_actividad,
             'actividad'       => $this->actividad->nombre,
             'sala'            => $this->sala->nombre,
         ];

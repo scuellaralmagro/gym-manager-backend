@@ -2,7 +2,10 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import CookieConsent from "./components/CookieConsent";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ConfirmDialogProvider } from "./components/ui/confirm-dialog";
+import { ToastProvider } from "./components/ui/toast";
 import { ROLE_ADMIN, ROLE_CLIENTE, ROLE_ENTRENADOR } from "./config/navigation";
+import ClassManagement from "./features/admin/ClassManagement";
 import UserManagement from "./features/admin/UserManagement";
 import LoginPage from "./features/auth/Login";
 import MainLayout from "./layouts/MainLayout";
@@ -47,7 +50,19 @@ function RootRedirect() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <ToastProvider>
+        <ConfirmDialogProvider>
+          <AppRoutes />
+          <CookieConsent />
+        </ConfirmDialogProvider>
+      </ToastProvider>
+    </BrowserRouter>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
 
@@ -97,10 +112,7 @@ function App() {
         >
           <Route index element={<Placeholder title="Dashboard" />} />
           <Route path="usuarios" element={<UserManagement />} />
-          <Route
-            path="clases"
-            element={<Placeholder title="Gestión de oferta / clases" />}
-          />
+          <Route path="clases" element={<ClassManagement />} />
           <Route
             path="reservas"
             element={<Placeholder title="Gestión de reservas" />}
@@ -113,8 +125,6 @@ function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <CookieConsent />
-    </BrowserRouter>
   );
 }
 

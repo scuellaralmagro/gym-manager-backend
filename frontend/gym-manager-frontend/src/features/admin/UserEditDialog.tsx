@@ -7,6 +7,7 @@ import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { useToast } from "../../components/ui/use-toast";
 import api from "../../lib/axios";
 import { handleLaravelErrors } from "../../lib/handleLaravelErrors";
 import { cn } from "../../lib/utils";
@@ -47,6 +48,7 @@ export default function UserEditDialog({
   onClose,
 }: UserEditDialogProps) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const authUser = useAuthStore((state) => state.user);
 
   // Evitamos que el admin se baje a sí mismo el rol
@@ -106,6 +108,7 @@ export default function UserEditDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "usuarios"] });
+      toast.success("Usuario actualizado");
       onClose();
     },
   });
@@ -113,8 +116,9 @@ export default function UserEditDialog({
   const onSubmit = async (values: EditFormValues) => {
     // Evitamos que el admin se baje a sí mismo el rol dentro del edit completo
     if (isSelf && values.id_rol !== currentIdRol) {
-      window.alert(
-        "No puedes cambiar tu propio rol. Pide a otro administrador que lo haga.",
+      toast.warning(
+        "No puedes cambiar tu propio rol",
+        "Pide a otro administrador que lo haga.",
       );
       setError("id_rol", {
         type: "validate",

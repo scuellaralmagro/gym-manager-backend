@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AdminActividadController;
+use App\Http\Controllers\AdminCatalogController;
 use App\Http\Controllers\AdminClassController;
 use App\Http\Controllers\AdminOverviewController;
+use App\Http\Controllers\AdminSalaController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassController;
@@ -88,6 +91,33 @@ Route::put('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'update'
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::delete('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::get('/admin/entrenadores', [AdminCatalogController::class, 'entrenadores'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::get('/admin/salas', [AdminCatalogController::class, 'salas'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::post('/admin/salas', [AdminSalaController::class, 'store'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::put('/admin/salas/{id_sala}', [AdminSalaController::class, 'update'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::delete('/admin/salas/{id_sala}', [AdminSalaController::class, 'destroy'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::get('/admin/actividades', [AdminCatalogController::class, 'actividades'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::post('/admin/actividades', [AdminActividadController::class, 'store'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::put('/admin/actividades/{id_actividad}', [AdminActividadController::class, 'update'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::delete('/admin/actividades/{id_actividad}', [AdminActividadController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::get('/admin/informes', [ReportController::class, 'kpis'])
