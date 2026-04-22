@@ -32,6 +32,7 @@ import {
   type RolNombre,
   type Usuario,
 } from "../../types/usuario";
+import UserCreateDialog from "./UserCreateDialog";
 import UserEditDialog from "./UserEditDialog";
 
 // Pantalla GESTION DE USUARIOS (admin)
@@ -83,6 +84,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState("");
   const [idRol, setIdRol] = useState<number | null>(null);
   const [editing, setEditing] = useState<Usuario | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async (id_usuario: number) => {
@@ -211,6 +213,13 @@ export default function UserManagement() {
             Administra las cuentas del sistema, su rol y sus accesos.
           </p>
         </div>
+        <Button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="h-10 w-auto px-4"
+        >
+          + Nuevo Usuario
+        </Button>
       </header>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-[#e0e2e6] bg-white p-4 sm:flex-row sm:items-center">
@@ -365,6 +374,11 @@ export default function UserManagement() {
           onClose={() => setEditing(null)}
         />
       )}
+
+      <UserCreateDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+      />
     </section>
   );
 }

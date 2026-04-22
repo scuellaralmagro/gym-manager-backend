@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ConfirmDialogProvider } from "./components/ui/confirm-dialog";
 import { ToastProvider } from "./components/ui/toast";
 import { ROLE_ADMIN, ROLE_CLIENTE, ROLE_ENTRENADOR } from "./config/navigation";
+import AdminDashboard from "./features/admin/AdminDashboard";
 import ClassManagement from "./features/admin/ClassManagement";
 import MetricsDashboard from "./features/admin/MetricsDashboard";
 import ReservationManagement from "./features/admin/ReservationManagement";
@@ -65,62 +66,59 @@ function App() {
 function AppRoutes() {
   return (
     <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="/login" element={<LoginPage />} />
 
-        {/* Zona Cliente */}
+      {/* Zona Cliente */}
+      <Route
+        path="/cliente"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE_CLIENTE]}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Placeholder title="Inicio" />} />
         <Route
-          path="/cliente"
-          element={
-            <ProtectedRoute allowedRoles={[ROLE_CLIENTE]}>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Placeholder title="Inicio" />} />
-          <Route
-            path="calendario"
-            element={<Placeholder title="Calendario de clases" />}
-          />
-          <Route
-            path="reservas"
-            element={<Placeholder title="Mis reservas" />}
-          />
-          <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
-        </Route>
+          path="calendario"
+          element={<Placeholder title="Calendario de clases" />}
+        />
+        <Route path="reservas" element={<Placeholder title="Mis reservas" />} />
+        <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
+      </Route>
 
-        {/* Zona Entrenador */}
-        <Route
-          path="/entrenador"
-          element={
-            <ProtectedRoute allowedRoles={[ROLE_ENTRENADOR]}>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="agenda" replace />} />
-          <Route path="agenda" element={<Placeholder title="Mi agenda" />} />
-          <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
-        </Route>
+      {/* Zona Entrenador */}
+      <Route
+        path="/entrenador"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE_ENTRENADOR]}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="agenda" replace />} />
+        <Route path="agenda" element={<Placeholder title="Mi agenda" />} />
+        <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
+      </Route>
 
-        {/* Zona Admin */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={[ROLE_ADMIN]}>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Placeholder title="Dashboard" />} />
-          <Route path="usuarios" element={<UserManagement />} />
-          <Route path="clases" element={<ClassManagement />} />
-          <Route path="reservas" element={<ReservationManagement />} />
-          <Route path="informes" element={<MetricsDashboard />} />
-        </Route>
+      {/* Zona Admin */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE_ADMIN]}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="usuarios" element={<UserManagement />} />
+        <Route path="clases" element={<ClassManagement />} />
+        <Route path="reservas" element={<ReservationManagement />} />
+        <Route path="informes" element={<MetricsDashboard />} />
+      </Route>
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 

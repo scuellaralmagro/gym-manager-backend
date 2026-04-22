@@ -85,6 +85,9 @@ Route::put('/admin/clases/{id_clase}', [AdminClassController::class, 'update'])
 Route::delete('/admin/clases/{id_clase}', [AdminClassController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
+Route::post('/admin/usuarios', [AdminUserController::class, 'store'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
 Route::put('/admin/usuarios/{id_usuario}/rol', [AdminUserController::class, 'updateRole'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
@@ -122,6 +125,9 @@ Route::delete('/admin/actividades/{id_actividad}', [AdminActividadController::cl
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::get('/admin/informes', [ReportController::class, 'kpis'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::get('/admin/dashboard-summary', [AdminOverviewController::class, 'dashboardSummary'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::get('/admin/reservas', [AdminOverviewController::class, 'reservas'])

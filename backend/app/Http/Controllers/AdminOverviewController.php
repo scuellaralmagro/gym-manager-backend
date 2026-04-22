@@ -8,9 +8,11 @@ use App\Http\Resources\UsuarioResource;
 use App\Models\Clase;
 use App\Models\Reserva;
 use App\Models\Usuario;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class AdminOverviewController extends Controller
 {
@@ -146,6 +148,86 @@ class AdminOverviewController extends Controller
         $usuarios = $query->paginate($perPage)->withQueryString();
 
         return UsuarioResource::collection($usuarios);
+    }
+
+    /**
+     * Resumen ligero para la pantalla de inicio del administrador.
+     *
+     * Devuelve tres KPIs y el dataset del gráfico semanal de
+     * ocupación por actividad. Lo hacemos separado del `/admin/informes` para
+     * no arrastrar cálculos pesados en cada login.
+     *
+     * Ventana temporal: semana actual (lunes 00:00 a domingo 23:59).
+     */
+    public function dashboardSummary(): JsonResponse
+    {
+        $inicioSemana = Carbon::now()->startOfWeek()->toDateString();
+        $finSemana    = Carbon::now()->endOfWeek()->toDateString();
+
+        // Reservas activas = todavía consumibles
+        $hoy = Carbon::today()->toDateString();
+        $reservasActivas = (int) Reserva::where('estado', 'Activa')
+            ->whereHas('clase', fn ($q) => $q->whereDate('fecha', '>=', $hoy))
+            ->count();
+
+        // % Llenado medio de las clases de esta semana
+        $clasesSemana = Clase::whereBetween('fecha', [$inicioSemana, $finSemana])
+            ->withCount(['reservas as reservas_activas_count' => fn ($q) => $q->where('estado', 'Activa')])
+            ->get(['id_clase', 'id_actividad', 'cupo_maximo']);
+
+        $cupoTotalSemana = (int) $clasesSemana->sum('cupo_maximo');
+        $reservasSemana  = (int) $clasesSemana->sum('reservas_activas_count');
+        $llenadoMedio    = $cupoTotalSemana > 0
+            ? round(($reservasSemana / $cupoTotalSemana) * 100, 1)
+            : 0;
+
+        // Nuevos usuarios registrados esta semana
+        $nuevosUsuarios = (int) Usuario::whereBetween('created_at', [
+            Carbon::now()->startOfWeek(),
+            Carbon::now()->endOfWeek(),
+        ])->count();
+
+        // Ocupación por actividad (esta semana)
+        $rowsOcupacion = DB::table('clases')
+            ->join('actividades', 'clases.id_actividad', '=', 'actividades.id_actividad')
+            ->leftJoin('reservas', function ($join) {
+                $join->on('reservas.id_clase', '=', 'clases.id_clase')
+                     ->where('reservas.estado', '=', 'Activa');
+            })
+            ->whereBetween('clases.fecha', [$inicioSemana, $finSemana])
+            ->select(
+                'actividades.nombre',
+                DB::raw('SUM(clases.cupo_maximo) as cupo_total'),
+                DB::raw('COUNT(reservas.id_reserva) as reservas_activas'),
+            )
+            ->groupBy('actividades.nombre')
+            ->orderBy('actividades.nombre')
+            ->get();
+
+        $ocupacionPorActividad = $rowsOcupacion->map(function ($row) {
+            $cupo = (int) $row->cupo_total;
+            $reservas = (int) $row->reservas_activas;
+            $ocupacion = $cupo > 0 ? round(($reservas / $cupo) * 100, 1) : 0;
+            return [
+                'actividad' => $row->nombre,
+                'ocupacion' => $ocupacion,
+                'reservas'  => $reservas,
+                'cupo'      => $cupo,
+            ];
+        })->values();
+
+        return response()->json([
+            'kpis' => [
+                'reservas_activas' => $reservasActivas,
+                'llenado_medio'    => $llenadoMedio,
+                'nuevos_usuarios'  => $nuevosUsuarios,
+            ],
+            'ocupacion_semanal' => $ocupacionPorActividad,
+            'rango' => [
+                'desde' => $inicioSemana,
+                'hasta' => $finSemana,
+            ],
+        ]);
     }
 
     /**

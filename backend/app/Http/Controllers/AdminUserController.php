@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\UpdateUserRoleRequest;
 use App\Http\Resources\UsuarioResource;
@@ -12,6 +13,28 @@ use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
 {
+    /**
+     * Crear un nuevo usuario (Admin).
+     */
+    public function store(StoreUserRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        $usuario = Usuario::create([
+            'nombre'        => $data['nombre'],
+            'apellidos'     => $data['apellidos'],
+            'email'         => $data['email'],
+            'telefono'      => $data['telefono'] ?? null,
+            'id_rol'        => (int) $data['id_rol'],
+            'hash_password' => $data['password'],
+        ]);
+
+        return (new UsuarioResource($usuario->fresh('rol')))
+            ->additional(['message' => 'Usuario creado correctamente.'])
+            ->response()
+            ->setStatusCode(201);
+    }
+
     /**
      * Cambiar el rol de un usuario (Admin).
      *
