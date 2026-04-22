@@ -64,6 +64,9 @@ Route::patch('/reservas/{id_reserva}/cancelar', [ReservationController::class, '
 Route::get('/entrenador/agenda', [TrainerController::class, 'agenda'])
     ->middleware(['auth:sanctum', 'role:entrenador']);
 
+Route::get('/entrenador/especialidades', [TrainerController::class, 'especialidades'])
+    ->middleware(['auth:sanctum', 'role:entrenador']);
+
 Route::get('/clases/{id_clase}/asistencia', [TrainerController::class, 'attendance'])
     ->middleware(['auth:sanctum', 'role:entrenador']);
 

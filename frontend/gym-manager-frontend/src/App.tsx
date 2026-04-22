@@ -15,6 +15,9 @@ import ClientCalendar from "./features/client/ClientCalendar";
 import ClientDashboard from "./features/client/ClientDashboard";
 import ClientProfile from "./features/client/ClientProfile";
 import MyReservations from "./features/client/MyReservations";
+import TrainerDashboard from "./features/trainer/TrainerDashboard";
+import TrainerProfile from "./features/trainer/TrainerProfile";
+import TrainerWeeklyAgenda from "./features/trainer/TrainerWeeklyAgenda";
 import MainLayout from "./layouts/MainLayout";
 import { useAuthStore } from "./store/authStore";
 
@@ -45,7 +48,7 @@ function RootRedirect() {
     case ROLE_ADMIN:
       return <Navigate to="/admin" replace />;
     case ROLE_ENTRENADOR:
-      return <Navigate to="/entrenador/agenda" replace />;
+      return <Navigate to="/entrenador" replace />;
     case ROLE_CLIENTE:
       return <Navigate to="/cliente" replace />;
     default:
@@ -96,9 +99,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="agenda" replace />} />
-        <Route path="agenda" element={<Placeholder title="Mi agenda" />} />
-        <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
+        <Route index element={<TrainerDashboard />} />
+        <Route path="agenda" element={<TrainerWeeklyAgenda />} />
+        <Route
+          path="clase/:idClase/asistencia"
+          element={<Placeholder title="Pasar lista" />}
+        />
+        <Route path="perfil" element={<TrainerProfile />} />
       </Route>
 
       {/* Zona Admin */}

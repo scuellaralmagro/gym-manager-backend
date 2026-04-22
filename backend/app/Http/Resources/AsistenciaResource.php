@@ -13,9 +13,10 @@ class AsistenciaResource extends JsonResource
             'id_reserva' => $this->id_reserva,
             'estado'     => $this->estado,
             'cliente'    => [
-                'nombre'    => $this->usuario->nombre,
-                'apellidos' => $this->usuario->apellidos,
-                'email'     => $this->usuario->email,
+                'id_usuario' => $this->usuario->id_usuario,
+                'nombre'     => $this->usuario->nombre,
+                'apellidos'  => $this->usuario->apellidos,
+                'email'      => $this->usuario->email,
             ],
         ];
     }

@@ -10,10 +10,10 @@ type ProtectedRouteProps = {
   allowedRoles?: number[];
 };
 
-// Defino las rutas por defecto para cada rol. (admin irá a su dashboard, entrenador a su agenda y cliente a su calendario)
+// Rutas por defecto por rol (admin → dashboard, entrenador → inicio, cliente → calendario).
 const DEFAULT_ROUTE_BY_ROLE: Record<number, string> = {
   1: "/admin",
-  2: "/entrenador/agenda",
+  2: "/entrenador",
   3: "/cliente/calendario",
 };
 

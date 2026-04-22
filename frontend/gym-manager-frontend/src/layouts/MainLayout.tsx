@@ -185,7 +185,11 @@ function SidebarLink({
   return (
     <NavLink
       to={item.path}
-      end={item.path === "/admin" || item.path === "/cliente"}
+      end={
+        item.path === "/admin" ||
+        item.path === "/cliente" ||
+        item.path === "/entrenador"
+      }
       onClick={onClick}
       className={({ isActive }) =>
         cn(
@@ -306,7 +310,11 @@ function NavbarLink({
   return (
     <NavLink
       to={item.path}
-      end={item.path === "/admin" || item.path === "/cliente"}
+      end={
+        item.path === "/admin" ||
+        item.path === "/cliente" ||
+        item.path === "/entrenador"
+      }
       onClick={onClick}
       className={({ isActive }) =>
         cn(

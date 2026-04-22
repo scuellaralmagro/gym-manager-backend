@@ -31,7 +31,7 @@ const ROLE_NAME_TO_ID: Record<string, number> = {
 
 const DASHBOARD_BY_ROLE: Record<number, string> = {
   1: "/admin",
-  2: "/entrenador/agenda",
+  2: "/entrenador",
   3: "/cliente/calendario",
 };
 

@@ -61,6 +61,12 @@ export const navItems: NavItem[] = [
 
   // Entrenador
   {
+    title: "Inicio",
+    path: "/entrenador",
+    icon: HomeIcon,
+    allowedRoles: [ROLE_ENTRENADOR],
+  },
+  {
     title: "Mi Agenda",
     path: "/entrenador/agenda",
     icon: AgendaIcon,
