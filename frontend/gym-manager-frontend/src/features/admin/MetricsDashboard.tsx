@@ -242,7 +242,10 @@ function buildPresets(): PresetDef[] {
   return [
     {
       label: "Últimos 7 días",
-      range: { fechaDesde: toIso(addDays(today, -6)), fechaHasta: toIso(today) },
+      range: {
+        fechaDesde: toIso(addDays(today, -6)),
+        fechaHasta: toIso(today),
+      },
     },
     {
       label: "Últimos 30 días",
@@ -410,6 +413,7 @@ function expandDayLabel(label: string): string {
 }
 
 // Pie chart de asistencia
+// TODO: Implementar funcionalidad de pasar lista de alumnos para hacer seguimiento de asistencia
 
 function AsistenciaDonut({ data }: { data: AsistenciaResumen }) {
   const chartData = [
@@ -421,9 +425,7 @@ function AsistenciaDonut({ data }: { data: AsistenciaResumen }) {
   const total = chartData.reduce((acc, item) => acc + item.value, 0);
 
   if (total === 0) {
-    return (
-      <EmptyChart message="Sin reservas en el periodo seleccionado." />
-    );
+    return <EmptyChart message="Sin reservas en el periodo seleccionado." />;
   }
 
   return (
