@@ -23,6 +23,11 @@ class ClaseResource extends JsonResource
                 'nombre'        => $this->sala->nombre,
                 'capacidad_max' => $this->sala->capacidad_max,
             ],
+            'entrenador'       => $this->whenLoaded('entrenador', fn () => [
+                'id_usuario' => $this->entrenador->id_usuario,
+                'nombre'     => $this->entrenador->nombre,
+                'apellidos'  => $this->entrenador->apellidos,
+            ]),
         ];
     }
 }

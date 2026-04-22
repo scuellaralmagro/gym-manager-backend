@@ -82,7 +82,7 @@ class ReservationController extends Controller
         // Obtenemos las reservas del usuario activo, con sus clases y actividades relacionadas,
         // ordenadas por fecha de creación de la reserva.
         $reservas = Reserva::where('id_usuario', $request->user()->id_usuario)
-            ->with(['clase.actividad', 'clase.sala'])
+            ->with(['clase.actividad', 'clase.sala', 'clase.entrenador'])
             ->orderByDesc('fecha_creacion')
             ->get();
 

@@ -11,10 +11,11 @@ import MetricsDashboard from "./features/admin/MetricsDashboard";
 import ReservationManagement from "./features/admin/ReservationManagement";
 import UserManagement from "./features/admin/UserManagement";
 import LoginPage from "./features/auth/Login";
+import ClientCalendar from "./features/client/ClientCalendar";
+import ClientDashboard from "./features/client/ClientDashboard";
 import MainLayout from "./layouts/MainLayout";
 import { useAuthStore } from "./store/authStore";
 
-// Placeholder temporal mientras no existan las páginas reales en /features.
 function Placeholder({ title }: { title: string }) {
   return (
     <section>
@@ -78,11 +79,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Placeholder title="Inicio" />} />
-        <Route
-          path="calendario"
-          element={<Placeholder title="Calendario de clases" />}
-        />
+        <Route index element={<ClientDashboard />} />
+        <Route path="calendario" element={<ClientCalendar />} />
         <Route path="reservas" element={<Placeholder title="Mis reservas" />} />
         <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
       </Route>

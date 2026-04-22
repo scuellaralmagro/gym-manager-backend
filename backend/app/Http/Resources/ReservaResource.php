@@ -20,6 +20,13 @@ class ReservaResource extends JsonResource
                 'hora_fin'    => $this->clase->hora_fin,
                 'actividad'   => $this->clase->actividad->nombre,
                 'sala'        => $this->clase->sala->nombre,
+                'entrenador'  => $this->clase->relationLoaded('entrenador') && $this->clase->entrenador
+                    ? [
+                        'id_usuario' => $this->clase->entrenador->id_usuario,
+                        'nombre'     => $this->clase->entrenador->nombre,
+                        'apellidos'  => $this->clase->entrenador->apellidos,
+                    ]
+                    : null,
             ],
         ];
     }
