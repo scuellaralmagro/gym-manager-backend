@@ -13,6 +13,8 @@ import UserManagement from "./features/admin/UserManagement";
 import LoginPage from "./features/auth/Login";
 import ClientCalendar from "./features/client/ClientCalendar";
 import ClientDashboard from "./features/client/ClientDashboard";
+import ClientProfile from "./features/client/ClientProfile";
+import MyReservations from "./features/client/MyReservations";
 import MainLayout from "./layouts/MainLayout";
 import { useAuthStore } from "./store/authStore";
 
@@ -81,8 +83,8 @@ function AppRoutes() {
       >
         <Route index element={<ClientDashboard />} />
         <Route path="calendario" element={<ClientCalendar />} />
-        <Route path="reservas" element={<Placeholder title="Mis reservas" />} />
-        <Route path="perfil" element={<Placeholder title="Mi perfil" />} />
+        <Route path="reservas" element={<MyReservations />} />
+        <Route path="perfil" element={<ClientProfile />} />
       </Route>
 
       {/* Zona Entrenador */}

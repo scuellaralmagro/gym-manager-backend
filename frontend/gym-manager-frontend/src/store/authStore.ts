@@ -10,7 +10,9 @@ import { create } from "zustand";
 export type AuthUser = {
   id: number;
   nombre: string;
+  apellidos: string;
   email: string;
+  telefono: string | null;
   id_rol: number;
 };
 
@@ -18,6 +20,7 @@ type AuthState = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (user: AuthUser) => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
 };
 
@@ -29,6 +32,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
       isAuthenticated: true,
     }),
+  updateUser: (patch) =>
+    set((state) =>
+      state.user ? { user: { ...state.user, ...patch } } : state,
+    ),
   logout: () =>
     set({
       user: null,

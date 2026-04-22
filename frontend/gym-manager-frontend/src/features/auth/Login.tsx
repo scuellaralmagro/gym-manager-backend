@@ -39,7 +39,9 @@ type PerfilResponse = {
   data: {
     id_usuario: number;
     nombre: string;
+    apellidos: string;
     email: string;
+    telefono: string | null;
     rol: string;
   };
 };
@@ -77,7 +79,9 @@ export default function Login() {
       const user: AuthUser = {
         id: perfil.data.id_usuario,
         nombre: perfil.data.nombre,
+        apellidos: perfil.data.apellidos,
         email: perfil.data.email,
+        telefono: perfil.data.telefono,
         id_rol: idRol,
       };
 

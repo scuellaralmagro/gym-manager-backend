@@ -35,6 +35,9 @@ Route::post('/logout', [AuthController::class, 'logout'])
 Route::get('/perfil', [UserController::class, 'profile'])
     ->middleware('auth:sanctum');
 
+Route::put('/perfil', [UserController::class, 'update'])
+    ->middleware('auth:sanctum');
+
 Route::get('/clases', [ClassController::class, 'index'])
     ->middleware('auth:sanctum');
 
