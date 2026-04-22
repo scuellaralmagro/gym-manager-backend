@@ -6,6 +6,7 @@ import { ConfirmDialogProvider } from "./components/ui/confirm-dialog";
 import { ToastProvider } from "./components/ui/toast";
 import { ROLE_ADMIN, ROLE_CLIENTE, ROLE_ENTRENADOR } from "./config/navigation";
 import ClassManagement from "./features/admin/ClassManagement";
+import MetricsDashboard from "./features/admin/MetricsDashboard";
 import ReservationManagement from "./features/admin/ReservationManagement";
 import UserManagement from "./features/admin/UserManagement";
 import LoginPage from "./features/auth/Login";
@@ -115,10 +116,7 @@ function AppRoutes() {
           <Route path="usuarios" element={<UserManagement />} />
           <Route path="clases" element={<ClassManagement />} />
           <Route path="reservas" element={<ReservationManagement />} />
-          <Route
-            path="informes"
-            element={<Placeholder title="Informes y métricas" />}
-          />
+          <Route path="informes" element={<MetricsDashboard />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

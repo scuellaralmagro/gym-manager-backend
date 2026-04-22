@@ -28,6 +28,7 @@ import api from "../../lib/axios";
 import { cn } from "../../lib/utils";
 import type { AdminReserva, ReservaEstado } from "../../types/reserva";
 import type { PaginatedResponse } from "../../types/usuario";
+import ForceReservationDialog from "./ForceReservationDialog";
 
 // Pantalla GESTION DE RESERVAS (admin)
 
@@ -81,6 +82,7 @@ export default function ReservationManagement() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [estado, setEstado] = useState<EstadoFiltro>("Activa");
+  const [forceDialogOpen, setForceDialogOpen] = useState(false);
 
   // Aplicamos el debouncer para evitar peticiones excesivas a la API
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -138,14 +140,7 @@ export default function ReservationManagement() {
   };
 
   const handleForzarReserva = () => {
-    // Flujo completo de "forzar reserva" queda pendiente: requiere selector
-    // de cliente y clase + endpoint específico que salte la validación
-    // "clase pasada / duplicada". Dejo el CTA visible para no romper el
-    // wireframe, pero aviso al admin mediante un toast
-    toast.warning(
-      "Funcionalidad en desarrollo",
-      "La creación manual de reservas desde admin se habilitará en la próxima iteración.",
-    );
+    setForceDialogOpen(true);
   };
 
   const columns = useMemo<ColumnDef<AdminReserva>[]>(
@@ -339,6 +334,11 @@ export default function ReservationManagement() {
           </div>
         </div>
       </div>
+
+      <ForceReservationDialog
+        open={forceDialogOpen}
+        onClose={() => setForceDialogOpen(false)}
+      />
     </section>
   );
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminActividadController;
 use App\Http\Controllers\AdminCatalogController;
 use App\Http\Controllers\AdminClassController;
 use App\Http\Controllers\AdminOverviewController;
+use App\Http\Controllers\AdminReservationController;
 use App\Http\Controllers\AdminSalaController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
@@ -124,6 +125,9 @@ Route::get('/admin/informes', [ReportController::class, 'kpis'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::get('/admin/reservas', [AdminOverviewController::class, 'reservas'])
+    ->middleware(['auth:sanctum', 'role:admin']);
+
+Route::post('/admin/reservas', [AdminReservationController::class, 'store'])
     ->middleware(['auth:sanctum', 'role:admin']);
 
 Route::get('/admin/clases', [AdminOverviewController::class, 'clases'])
