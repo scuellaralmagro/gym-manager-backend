@@ -9,9 +9,8 @@ use Illuminate\Validation\Validator;
 /**
  * Validación del endpoint PUT /api/admin/salas/{id_sala}.
  *
- * Además de las reglas básicas, impide bajar la capacidad de la sala por
- * debajo del cupo de alguna clase ya programada: si no lo hiciéramos,
- * quedarían plazas vendidas "fantasma" (por encima del aforo nuevo).
+ * Limitación: impide bajar la capacidad de la sala por
+ * debajo del cupo de alguna clase ya programadda.
  */
 class UpdateSalaRequest extends FormRequest
 {

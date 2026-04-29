@@ -27,7 +27,7 @@ class StoreUserRequest extends FormRequest
     /**
      * Reglas de validación para crear un usuario.
      *
-     * La regex de 'password' exige al menos una minúscula, una mayúscula,
+     * La regex de password exige al menos una minúscula, una mayúscula,
      * un dígito y un símbolo no alfanumérico.
      *
      * @return array<string, array<int, string>> Reglas por campo.

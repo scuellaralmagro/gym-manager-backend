@@ -32,9 +32,8 @@ class StoreClassRequest extends FormRequest
     /**
      * Reglas de validación para crear una clase.
      *
-     * El tope de 'cupo_maximo' se calcula dinámicamente a partir de la
-     * capacidad de la sala seleccionada, para que nunca se pueda ofertar
-     * más plazas que las físicas de la sala.
+     * - El cupo máximo no puede superar la capacidad de la sala elegida.
+     * - La hora de fin debe ser posterior a la hora de inicio.
      *
      * @return array<string, array<int, string>> Reglas para fecha, horas, cupo, sala, entrenador y actividad.
      */
@@ -66,9 +65,7 @@ class StoreClassRequest extends FormRequest
     /**
      * Validaciones extra tras las reglas principales.
      *
-     * Comprueba que el usuario asignado tiene rol Entrenador (id_rol = 2).
-     * Lo hacemos aquí (no en rules()) porque necesitamos la info del usuario
-     * una vez pasada la validación básica de 'exists'.
+     * Comprueba que el usuario asignado tiene rol Entrenador (id_rol = 2)..
      *
      * @return array<int, \Closure> Cierres de validación aplicados tras rules().
      */

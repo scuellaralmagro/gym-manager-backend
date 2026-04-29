@@ -10,10 +10,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * Catálogos ligeros para los selectores del panel de administración.
  *
- * Los endpoints de este controlador devuelven listas completas pensadas
- * para rellenar `<select>` y combo-boxes en el frontend (entrenadores,
- * salas y actividades). Son respuestas pequeñas, sin paginación, ya que
- * nunca crecerán al nivel de la tabla de reservas o clases.
+ * Devuelve los datos necesarios para los selectores del panel de administración.
  */
 class AdminCatalogController extends Controller
 {

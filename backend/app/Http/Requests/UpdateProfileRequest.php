@@ -32,9 +32,8 @@ class UpdateProfileRequest extends FormRequest
     /**
      * Reglas de validación para editar el perfil propio.
      *
-     * El email se valida único excluyendo al propio usuario, y los
-     * campos de contraseña son todos opcionales porque el cliente puede
-     * simplemente actualizar datos sin tocar la contraseña.
+     * La regex de 'password_actual' y 'nueva_password' exige al menos una minúscula, una mayúscula,
+     * un dígito y un símbolo no alfanumérico.
      *
      * @return array<string, array<int, string|\Illuminate\Validation\Rules\Unique>> Reglas por campo.
      */

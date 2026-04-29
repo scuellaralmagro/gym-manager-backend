@@ -140,10 +140,7 @@ class AdminOverviewController extends Controller
      * Soporta:
      *  - 'q'      → búsqueda por nombre, apellidos o email (ILIKE, case-insensitive).
      *  - 'id_rol' → filtra por rol (1=admin, 2=entrenador, 3=cliente).
-     *  - 'per_page' → 1..50 (por defecto 10).
-     *
-     * El per_page se acota para evitar que un cliente malicioso pida
-     * cargas enormes (p. ej. 10k filas) y tumbe la base de datos.
+     *  - 'per_page' → 1..50 (paginación, por defecto 10).
      *
      * @param  \Illuminate\Http\Request  $request  Filtros y paginación en query string.
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection  Paginador de UsuarioResource.
@@ -183,10 +180,9 @@ class AdminOverviewController extends Controller
      *
      * Calcula tres KPIs rápidos (reservas activas, llenado medio de la
      * semana y nuevos usuarios) más el dataset del gráfico de ocupación
-     * por actividad. Se separa de /admin/informes para no arrastrar sus
-     * cálculos pesados en cada login.
+     * por actividad. Se separa de /admin/informes para no hacer cálculos pesados innecesarios.
      *
-     * Ventana temporal: semana actual (lunes 00:00 → domingo 23:59).
+     * Ventana temporal: semana actual
      *
      * @return \Illuminate\Http\JsonResponse  JSON con { kpis, ocupacion_semanal, rango }.
      */
@@ -195,7 +191,7 @@ class AdminOverviewController extends Controller
         $inicioSemana = Carbon::now()->startOfWeek()->toDateString();
         $finSemana    = Carbon::now()->endOfWeek()->toDateString();
 
-        // Reservas activas = todavía consumibles (clase de hoy en adelante)
+        // Reservas activas
         $hoy = Carbon::today()->toDateString();
         $reservasActivas = (int) Reserva::where('estado', 'Activa')
             ->whereHas('clase', fn ($q) => $q->whereDate('fecha', '>=', $hoy))
@@ -266,8 +262,7 @@ class AdminOverviewController extends Controller
      *
      * A diferencia de ReservationController::cancel, no exige que la
      * reserva pertenezca al usuario autenticado: el administrador puede
-     * cancelar la reserva de cualquier cliente (por ejemplo si avisa al
-     * gimnasio de que no va a asistir).
+     * cancelar la reserva de cualquier cliente.
      *
      * @param  int  $id_reserva  ID de la reserva a cancelar.
      * @return \Illuminate\Http\JsonResponse  Mensaje de éxito (200) o 409 si ya estaba cancelada.

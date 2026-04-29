@@ -7,9 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Validación del endpoint POST /api/reservas.
  *
- * La autorización (que sea un Cliente) la cubre el middleware
- * 'role:cliente' en routes/api.php. Aquí solo validamos que el id_clase
- * recibido sea un entero que exista en la tabla de clases.
+ * Solo validamos que el id_clase recibido sea un entero que exista en la tabla de clases.
  */
 class StoreReservationRequest extends FormRequest
 {

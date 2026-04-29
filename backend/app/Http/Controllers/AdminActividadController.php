@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * CRUD de Actividades para el panel de administración.
  *
- * Las actividades son los "tipos" de clase (Yoga, Pilates, Zumba…). La FK
+ * Las actividades son los tipos de clase (Yoga, Pilates, Zumba…). La columna
  * clases.id_actividad usa ON DELETE CASCADE, así que un borrado directo
  * arrastraría clases y reservas. Para no destruir datos sin querer,
  * bloqueamos el borrado si la actividad tiene clases asociadas.
@@ -58,6 +58,8 @@ class AdminActividadController extends Controller
      * Contamos primero las clases que usan esta actividad; si hay alguna,
      * devolvemos 409 con un mensaje claro. Así evitamos que el admin borre
      * sin querer todas las clases y reservas asociadas por cascade.
+     * 
+     * Nota: Esto podría haberse hecho también con una restricción directamente en la tabla de actividades (ON DELETE RESTRICT).
      *
      * @param  int  $id_actividad  ID de la actividad a borrar.
      * @return \Illuminate\Http\JsonResponse  Mensaje de éxito (200), o 409 si tiene clases asociadas.

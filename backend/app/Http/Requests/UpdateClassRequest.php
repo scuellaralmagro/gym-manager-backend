@@ -10,8 +10,8 @@ use Illuminate\Validation\Validator;
 /**
  * Validación del endpoint PUT /api/admin/clases/{id_clase}.
  *
- * Hermano de StoreClassRequest pero con reglas 'sometimes' para permitir
- * actualizaciones parciales (solo los campos enviados se validan).
+ * Similar a StoreClassRequest pero con reglas 'sometimes' para permitir
+ * actualizaciones parciales.
  */
 class UpdateClassRequest extends FormRequest
 {
@@ -30,7 +30,7 @@ class UpdateClassRequest extends FormRequest
     /**
      * Reglas de validación para actualizar una clase.
      *
-     * Todas las claves usan 'sometimes' para aceptar PATCHes parciales.
+     * Todas las claves usan 'sometimes' para aceptar actualizaciones parciales.
      * Si se toca 'id_sala', recalculamos el tope de cupo contra la
      * capacidad real de la nueva sala.
      *

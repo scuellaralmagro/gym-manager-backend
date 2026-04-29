@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Controlador de informes (KPIs) para el rol Administrador.
  *
- * Expone un único endpoint que concentra los indicadores clave de
- * rendimiento del gimnasio. Todos los cálculos protegen contra divisiones
- * por cero devolviendo 0 o null cuando no hay datos en el periodo.
+ * Expone un único endpoint que calcula los KPIs principales del gimnasio.
  */
 class ReportController extends Controller
 {
@@ -137,7 +135,7 @@ class ReportController extends Controller
         }
 
         // Reservas activas agrupadas por día de la semana de la clase.
-        // ISODOW de PostgreSQL → 1=Lunes ... 7=Domingo.
+        // 1 es Lunes, 2 es Martes, etc.
         $rowsDia = (clone $queryReservas)
             ->where('reservas.estado', 'Activa')
             ->join('clases', 'reservas.id_clase', '=', 'clases.id_clase')

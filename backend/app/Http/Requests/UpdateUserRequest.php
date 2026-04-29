@@ -29,7 +29,7 @@ class UpdateUserRequest extends FormRequest
      * Reglas de validación para actualizar un usuario.
      *
      * El email usa Rule::unique con ignore() para permitir que el propio
-     * usuario mantenga su email al guardarse sin tocarlo.
+     * usuario mantenga su email al guardarse.
      *
      * @return array<string, array<int, string|\Illuminate\Validation\Rules\Unique>> Reglas por campo.
      */

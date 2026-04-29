@@ -7,9 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Validación del endpoint POST /api/login.
  *
- * No requiere autenticación previa, por eso authorize() devuelve true:
- * cualquiera puede intentar iniciar sesión (aunque el rate-limit 'login'
- * corta a 5 intentos por minuto por IP+email).
+ * Valida el email y la contraseña.
  */
 class LoginRequest extends FormRequest
 {

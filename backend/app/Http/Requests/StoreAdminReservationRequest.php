@@ -11,8 +11,7 @@ use Illuminate\Validation\Validator;
  *
  * El administrador crea una reserva "forzada" para un cliente concreto.
  * Además de comprobar que ambos IDs existen, restringe el id_usuario a
- * cuentas con rol Cliente: no tiene sentido reservar clases para un
- * entrenador o para otro administrador.
+ * cuentas con rol Cliente (solo clientes pueden tener reservas).
  */
 class StoreAdminReservationRequest extends FormRequest
 {
@@ -44,9 +43,7 @@ class StoreAdminReservationRequest extends FormRequest
     /**
      * Validación extra tras las reglas principales.
      *
-     * Solo los clientes (id_rol = 3) pueden tener reservas. Lo hacemos aquí
-     * porque necesitamos cargar al usuario tras el 'exists' para conocer
-     * su rol.
+     * Solo los clientes (id_rol = 3) pueden tener reservas.
      *
      * @return array<int, \Closure> Cierres de validación aplicados tras rules().
      */
