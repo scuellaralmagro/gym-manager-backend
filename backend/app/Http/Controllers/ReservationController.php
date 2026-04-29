@@ -12,13 +12,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador de reservas del cliente.
+ *
+ * Contiene las tres acciones que puede hacer un cliente sobre sus propias
+ * reservas: crear una nueva, listar las suyas y cancelar una existente.
+ * La identidad del cliente se saca siempre del token Sanctum.
+ */
 class ReservationController extends Controller
 {
     /**
-     * Crear una reserva.
+     * Crear una reserva para el cliente autenticado.
      *
-     * Reserva una plaza en una clase para el cliente autenticado.
-     * Aplica control de duplicidad, validación temporal y bloqueo pesimista de aforo.
+     * Pasos:
+     *  1. Evito duplicados: si ya tiene una reserva Activa para esa clase, 409.
+     *  2. Dentro de una transacción, bloqueo la fila de la clase con
+     *     lockForUpdate para impedir un choque entre dos peticiones a la vez.
+     *  3. Si la clase ya ha empezado o no quedan plazas, 422.
+     *
+     * @param  \App\Http\Requests\StoreReservationRequest  $request  Contiene el id_clase validado.
+     * @return \Illuminate\Http\JsonResponse                         Reserva creada (201), 409 si duplicada o 422 si no se puede reservar.
      */
     public function store(StoreReservationRequest $request): JsonResponse
     {
@@ -37,9 +50,8 @@ class ReservationController extends Controller
             ], 409);
         }
 
-        // Utilizamos lockForUpdate para bloquear temporalmente (mientras se procesa la transacción)
-        // la fila de la clase seleccionada, para evitar que otras transacciones concurrentes
-        // superen el cupo de la clase. Otra transacción que intente leer esta fila quedará en espera.
+        // lockForUpdate bloquea la fila de la clase mientras dura la transacción.
+        // Así evitamos que dos reservas concurrentes superen el cupo.
         $reserva = DB::transaction(function () use ($idUsuario, $idClase) {
 
             $clase = Clase::lockForUpdate()->findOrFail($idClase);
@@ -72,15 +84,17 @@ class ReservationController extends Controller
     }
 
     /**
-     * Listar mis reservas.
+     * Listar las reservas del cliente autenticado.
      *
-     * Devuelve todas las reservas del cliente autenticado con los detalles
-     * de cada clase (actividad, sala, horario), ordenadas por fecha descendente.
+     * Devuelve todas las reservas (activas y canceladas) junto con el detalle
+     * de cada clase (actividad, sala, entrenador y horario). Se usa en la
+     * pantalla "Mis reservas" del cliente.
+     *
+     * @param  \Illuminate\Http\Request  $request  Petición autenticada.
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection  Colección de ReservaResource ordenada por fecha de creación desc.
      */
     public function myReservations(Request $request): AnonymousResourceCollection
     {
-        // Obtenemos las reservas del usuario activo, con sus clases y actividades relacionadas,
-        // ordenadas por fecha de creación de la reserva.
         $reservas = Reserva::where('id_usuario', $request->user()->id_usuario)
             ->with(['clase.actividad', 'clase.sala', 'clase.entrenador'])
             ->orderByDesc('fecha_creacion')
@@ -92,8 +106,12 @@ class ReservationController extends Controller
     /**
      * Cancelar una reserva propia.
      *
-     * Cambia el estado de la reserva a 'Cancelada'. Solo puede cancelar
-     * reservas que pertenezcan al cliente autenticado.
+     * Cambia el estado a 'Cancelada'. Solo se permite cancelar reservas que
+     * pertenezcan al usuario autenticado.
+     *
+     * @param  \Illuminate\Http\Request  $request     Petición autenticada.
+     * @param  int                       $id_reserva  ID de la reserva a cancelar.
+     * @return \Illuminate\Http\JsonResponse          Mensaje de éxito (200), o 409 si ya estaba cancelada.
      */
     public function cancel(Request $request, int $id_reserva): JsonResponse
     {

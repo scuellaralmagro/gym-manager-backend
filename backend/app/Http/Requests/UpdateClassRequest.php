@@ -7,16 +7,37 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
+/**
+ * Validación del endpoint PUT /api/admin/clases/{id_clase}.
+ *
+ * Hermano de StoreClassRequest pero con reglas 'sometimes' para permitir
+ * actualizaciones parciales (solo los campos enviados se validan).
+ */
 class UpdateClassRequest extends FormRequest
 {
+    /**
+     * Autoriza la petición.
+     *
+     * Ruta protegida por 'role:admin', por eso devolvemos true aquí.
+     *
+     * @return bool Siempre true.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas de validación para actualizar una clase.
+     *
+     * Todas las claves usan 'sometimes' para aceptar PATCHes parciales.
+     * Si se toca 'id_sala', recalculamos el tope de cupo contra la
+     * capacidad real de la nueva sala.
+     *
+     * @return array<string, array<int, string>> Reglas opcionales para cada campo.
+     */
     public function rules(): array
     {
-        // Utilizamos sometimes para permitir actualizaciones parciales en el mismo endpoint
         $capacidadMax = null;
 
         if ($this->filled('id_sala')) {
@@ -40,6 +61,13 @@ class UpdateClassRequest extends FormRequest
         ];
     }
 
+    /**
+     * Validaciones extra tras las reglas principales.
+     *
+     * Si se envía un nuevo 'id_usuario', comprobamos que sea un Entrenador.
+     *
+     * @return array<int, \Closure> Cierres de validación aplicados tras rules().
+     */
     public function after(): array
     {
         return [
@@ -60,6 +88,11 @@ class UpdateClassRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes personalizados de error.
+     *
+     * @return array<string, string> Mensajes por regla.
+     */
     public function messages(): array
     {
         return [

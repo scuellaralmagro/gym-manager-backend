@@ -7,15 +7,27 @@ use App\Models\Sala;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Catálogos ligeros para los selectores del panel de administración.
+ *
+ * Los endpoints de este controlador devuelven listas completas pensadas
+ * para rellenar `<select>` y combo-boxes en el frontend (entrenadores,
+ * salas y actividades). Son respuestas pequeñas, sin paginación, ya que
+ * nunca crecerán al nivel de la tabla de reservas o clases.
+ */
 class AdminCatalogController extends Controller
 {
     /**
-     * Catálogos de entrenadores, salas y actividades para los selectores del panel de administración
+     * Listar entrenadores para los selectores del panel de administración.
+     *
+     * Filtra por id_rol = 2 (Entrenador) según la tabla 'roles'. Devuelve
+     * solo los campos imprescindibles para construir las opciones del
+     * combo (id y nombre).
+     *
+     * @return \Illuminate\Http\JsonResponse  JSON { data: Array<{id_usuario, nombre, apellidos}> }.
      */
-
     public function entrenadores(): JsonResponse
     {
-        // id_rol = 2 según la tabla `roles` definida en AGENTS.md.
         $entrenadores = Usuario::where('id_rol', 2)
             ->orderBy('nombre')
             ->orderBy('apellidos')
@@ -24,12 +36,28 @@ class AdminCatalogController extends Controller
         return response()->json(['data' => $entrenadores]);
     }
 
+    /**
+     * Listar salas para los selectores del panel de administración.
+     *
+     * Devuelve todas las salas con su capacidad. El frontend necesita la
+     * capacidad para limitar el cupo máximo al crear o editar una clase.
+     *
+     * @return \Illuminate\Http\JsonResponse  JSON { data: Array<{id_sala, nombre, capacidad_max}> }.
+     */
     public function salas(): JsonResponse
     {
         $salas = Sala::orderBy('nombre')->get(['id_sala', 'nombre', 'capacidad_max']);
         return response()->json(['data' => $salas]);
     }
 
+    /**
+     * Listar actividades para los selectores del panel de administración.
+     *
+     * Devuelve todas las actividades con su descripción para que el
+     * administrador pueda elegirla al crear o editar clases.
+     *
+     * @return \Illuminate\Http\JsonResponse  JSON { data: Array<{id_actividad, nombre, descripcion}> }.
+     */
     public function actividades(): JsonResponse
     {
         $actividades = Actividad::orderBy('nombre')

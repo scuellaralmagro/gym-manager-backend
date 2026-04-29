@@ -7,14 +7,37 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validación del endpoint PUT /api/perfil.
+ *
+ * Editar el propio perfil. Además de las reglas básicas de datos, valida
+ * de forma manual la lógica de cambio de contraseña: el usuario tiene que
+ * introducir su contraseña actual y confirmar la nueva.
+ */
 class UpdateProfileRequest extends FormRequest
 {
+    /**
+     * Autoriza la petición.
+     *
+     * La ruta ya está protegida por 'auth:sanctum', así que aquí basta con
+     * asegurarnos de que exista un usuario autenticado.
+     *
+     * @return bool true si hay usuario autenticado, false en caso contrario.
+     */
     public function authorize(): bool
     {
         return $this->user() !== null;
-        // La acción se permite a cualquier usuario ya que la ruta ya está protegida por sanctum
     }
 
+    /**
+     * Reglas de validación para editar el perfil propio.
+     *
+     * El email se valida único excluyendo al propio usuario, y los
+     * campos de contraseña son todos opcionales porque el cliente puede
+     * simplemente actualizar datos sin tocar la contraseña.
+     *
+     * @return array<string, array<int, string|\Illuminate\Validation\Rules\Unique>> Reglas por campo.
+     */
     public function rules(): array
     {
         $id = (int) $this->user()->id_usuario;
@@ -36,6 +59,16 @@ class UpdateProfileRequest extends FormRequest
         ];
     }
 
+    /**
+     * Validaciones adicionales sobre el cambio de contraseña.
+     *
+     * Si el usuario ha rellenado 'nueva_password', exige también la
+     * 'password_actual' correcta y que 'confirmar_password' coincida con
+     * la nueva. Si no quiere cambiarla, simplemente deja esos campos vacíos.
+     *
+     * @param  \Illuminate\Contracts\Validation\Validator  $validator  Instancia del validador Laravel.
+     * @return void
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
@@ -51,7 +84,6 @@ class UpdateProfileRequest extends FormRequest
                     'Debes introducir tu contraseña actual para cambiarla.',
                 );
             } elseif (! Hash::check($actual, $this->user()->hash_password)) {
-                // Comprobamos que la contraseña actual es correcta antes de cambiarla
                 $v->errors()->add(
                     'password_actual',
                     'La contraseña actual no es correcta.',
@@ -68,6 +100,11 @@ class UpdateProfileRequest extends FormRequest
         });
     }
 
+    /**
+     * Mensajes personalizados de error.
+     *
+     * @return array<string, string> Mensajes por regla.
+     */
     public function messages(): array
     {
         return [

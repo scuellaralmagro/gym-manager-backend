@@ -14,12 +14,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Overview del panel de administración.
+ *
+ * Agrupa los endpoints "de consulta masiva" que necesita el admin:
+ * listados paginados (reservas, clases, usuarios), el resumen ligero del
+ * dashboard y la cancelación de reservas ajenas.
+ */
 class AdminOverviewController extends Controller
 {
     /**
-     * Listar todas las reservas (Admin).
+     * Listar reservas con paginación y filtros.
      *
-     * Soporta paginación y filtros server-side (q, estado, id_clase).
+     * Soporta:
+     *  - 'q'        → búsqueda por nombre/apellidos/email del cliente o actividad.
+     *  - 'estado'   → 'Activa' | 'Cancelada'.
+     *  - 'id_clase' → filtra por una clase concreta.
+     *  - 'per_page' → tamaño de página (1..50, por defecto 10).
+     *
+     * @param  \Illuminate\Http\Request  $request  Filtros y paginación en query string.
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection  Paginador de AdminReservaResource.
      */
     public function reservas(Request $request): AnonymousResourceCollection
     {
@@ -62,11 +76,19 @@ class AdminOverviewController extends Controller
     }
 
     /**
-     * Listar todas las clases (Admin).
+     * Listar clases con paginación, filtros y ordenación.
      *
-     * Soporta paginación, filtros (fecha_desde, fecha_hasta, id_usuario) y
-     * ordenación server-side para que la tabla del admin escale cuando la
-     * oferta crezca y no arrastre miles de filas en cada render.
+     * Soporta:
+     *  - 'fecha_desde' / 'fecha_hasta' → rango de fechas (Y-m-d).
+     *  - 'id_usuario'                   → filtra por entrenador asignado.
+     *  - 'sort'                         → whitelisted: fecha, hora_inicio, cupo_maximo.
+     *  - 'direction'                    → asc/desc (por defecto asc).
+     *
+     * Mantenemos una lista blanca de columnas ordenables para evitar
+     * inyecciones a través del parámetro sort.
+     *
+     * @param  \Illuminate\Http\Request  $request  Filtros y paginación en query string.
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection  Paginador de AdminClaseResource.
      */
     public function clases(Request $request): AnonymousResourceCollection
     {
@@ -77,7 +99,7 @@ class AdminOverviewController extends Controller
         $fechaHasta = $request->query('fecha_hasta');
         $idUsuario  = $request->query('id_usuario');
 
-        // Whitelist de columnas ordenables para evitar inyecciones de SQL
+        // Whitelist de columnas ordenables para evitar inyecciones SQL
         $allowedSorts = ['fecha', 'hora_inicio', 'cupo_maximo'];
         $sort = $request->query('sort', 'fecha');
         if (! in_array($sort, $allowedSorts, true)) {
@@ -113,16 +135,22 @@ class AdminOverviewController extends Controller
     }
 
     /**
-     * Listar todos los usuarios (Admin).
+     * Listar usuarios con paginación y filtros.
      *
-     * Soporta paginación y filtros server-side (q, id_rol) para que la tabla
-     * del frontend no arrastre miles de filas en cada render.
+     * Soporta:
+     *  - 'q'      → búsqueda por nombre, apellidos o email (ILIKE, case-insensitive).
+     *  - 'id_rol' → filtra por rol (1=admin, 2=entrenador, 3=cliente).
+     *  - 'per_page' → 1..50 (por defecto 10).
+     *
+     * El per_page se acota para evitar que un cliente malicioso pida
+     * cargas enormes (p. ej. 10k filas) y tumbe la base de datos.
+     *
+     * @param  \Illuminate\Http\Request  $request  Filtros y paginación en query string.
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection  Paginador de UsuarioResource.
      */
     public function usuarios(Request $request): AnonymousResourceCollection
     {
         $perPage = (int) $request->query('per_page', 10);
-        // Limito el rango de per_page para que un cliente malicioso no pueda
-        // pedir cargas enormes (10k filas) y tumbar la base de datos.
         $perPage = max(1, min($perPage, 50));
 
         $search = trim((string) $request->query('q', ''));
@@ -153,24 +181,27 @@ class AdminOverviewController extends Controller
     /**
      * Resumen ligero para la pantalla de inicio del administrador.
      *
-     * Devuelve tres KPIs y el dataset del gráfico semanal de
-     * ocupación por actividad. Lo hacemos separado del `/admin/informes` para
-     * no arrastrar cálculos pesados en cada login.
+     * Calcula tres KPIs rápidos (reservas activas, llenado medio de la
+     * semana y nuevos usuarios) más el dataset del gráfico de ocupación
+     * por actividad. Se separa de /admin/informes para no arrastrar sus
+     * cálculos pesados en cada login.
      *
-     * Ventana temporal: semana actual (lunes 00:00 a domingo 23:59).
+     * Ventana temporal: semana actual (lunes 00:00 → domingo 23:59).
+     *
+     * @return \Illuminate\Http\JsonResponse  JSON con { kpis, ocupacion_semanal, rango }.
      */
     public function dashboardSummary(): JsonResponse
     {
         $inicioSemana = Carbon::now()->startOfWeek()->toDateString();
         $finSemana    = Carbon::now()->endOfWeek()->toDateString();
 
-        // Reservas activas = todavía consumibles
+        // Reservas activas = todavía consumibles (clase de hoy en adelante)
         $hoy = Carbon::today()->toDateString();
         $reservasActivas = (int) Reserva::where('estado', 'Activa')
             ->whereHas('clase', fn ($q) => $q->whereDate('fecha', '>=', $hoy))
             ->count();
 
-        // % Llenado medio de las clases de esta semana
+        // % llenado medio de las clases de esta semana
         $clasesSemana = Clase::whereBetween('fecha', [$inicioSemana, $finSemana])
             ->withCount(['reservas as reservas_activas_count' => fn ($q) => $q->where('estado', 'Activa')])
             ->get(['id_clase', 'id_actividad', 'cupo_maximo']);
@@ -231,9 +262,15 @@ class AdminOverviewController extends Controller
     }
 
     /**
-     * Cancelar cualquier reserva (Admin).
+     * Cancelar cualquier reserva (solo Admin).
      *
-     * Permite al administrador cancelar la reserva de cualquier usuario.
+     * A diferencia de ReservationController::cancel, no exige que la
+     * reserva pertenezca al usuario autenticado: el administrador puede
+     * cancelar la reserva de cualquier cliente (por ejemplo si avisa al
+     * gimnasio de que no va a asistir).
+     *
+     * @param  int  $id_reserva  ID de la reserva a cancelar.
+     * @return \Illuminate\Http\JsonResponse  Mensaje de éxito (200) o 409 si ya estaba cancelada.
      */
     public function cancelarReserva(int $id_reserva): JsonResponse
     {

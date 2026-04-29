@@ -15,23 +15,35 @@ use App\Http\Controllers\TrainerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+/*
+* Rutas de la API
+*
+* Todas las rutas están bajo el prefijo /api (lo añade Laravel 11+).
+* La autenticación es stateless vía tokens de Sanctum (Authorization: Bearer).
+* El alias "role:xxx" es un middleware propio (App\Http\Middleware\CheckRole)
+* que comprueba el rol del usuario autenticado.
+*
+*/
 
-/**
- * Rutas de autenticación
- * /login POST: inicio de sesión
- * /logout POST: cierre de sesión
- */
+/*
+* Autenticación
+*
+* POST /login  -> iniciar sesión y recibir un token Bearer
+* POST /logout -> cerrar sesión (revoca el token actual)
+*/
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware(['guest', 'throttle:login']);
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth:sanctum');
 
-/**
- * Rutas de perfil y clases
- * /perfil GET: información del usuario activo autenticado
- * /clases GET: listado de clases disponibles para reservar
- */
+/*
+* Perfil y listado de clases (cualquier usuario autenticado)
+*
+* GET /perfil  -> datos del usuario autenticado
+* PUT /perfil  -> actualizar nombre, apellidos, email, teléfono y contraseña
+* GET /clases  -> listado público (dentro de la app) de clases con plazas
+*/
 Route::get('/perfil', [UserController::class, 'profile'])
     ->middleware('auth:sanctum');
 
@@ -41,12 +53,13 @@ Route::put('/perfil', [UserController::class, 'update'])
 Route::get('/clases', [ClassController::class, 'index'])
     ->middleware('auth:sanctum');
 
-/**
- * Rutas de reservas
- * /reservas POST: crea una nueva reserva para el usuario activo
- * /reservas/mis-reservas GET: lista las reservas del usuario activo
- * /reservas/{id_reserva}/cancelar PATCH: cancela una reserva del usuario activo
- */
+/*
+* Reservas (solo rol Cliente)
+*
+* POST   /reservas                          -> crea una reserva
+* GET    /reservas/mis-reservas             -> lista las reservas propias
+* PATCH  /reservas/{id_reserva}/cancelar    -> cancela una reserva propia
+*/
 Route::post('/reservas', [ReservationController::class, 'store'])
     ->middleware(['auth:sanctum', 'role:cliente']);
 
@@ -56,11 +69,13 @@ Route::get('/reservas/mis-reservas', [ReservationController::class, 'myReservati
 Route::patch('/reservas/{id_reserva}/cancelar', [ReservationController::class, 'cancel'])
     ->middleware(['auth:sanctum', 'role:cliente']);
 
-/**
- * Rutas de entrenador
- * /entrenador/agenda GET: listado de clases asignadas al entrenador activo
- * /clases/{id_clase}/asistencia GET: listado de asistencias a una clase específica
- */
+/*
+* Entrenador (solo rol Entrenador)
+*
+* GET /entrenador/agenda           -> clases asignadas (soporta ?desde=&hasta=)
+* GET /entrenador/especialidades   -> actividades que imparte (solo lectura)
+* GET /clases/{id_clase}/asistencia -> listado de clientes reservados
+*/
 Route::get('/entrenador/agenda', [TrainerController::class, 'agenda'])
     ->middleware(['auth:sanctum', 'role:entrenador']);
 
@@ -70,83 +85,48 @@ Route::get('/entrenador/especialidades', [TrainerController::class, 'especialida
 Route::get('/clases/{id_clase}/asistencia', [TrainerController::class, 'attendance'])
     ->middleware(['auth:sanctum', 'role:entrenador']);
 
-/**
- * Rutas de administrador
- * /admin/clases POST: crea una nueva clase
- * /admin/clases/{id_clase} PUT: actualiza una clase
- * /admin/clases/{id_clase} DELETE: elimina una clase
- * /admin/usuarios/{id_usuario}/rol PUT: cambia el rol de un usuario
- * /admin/informes GET: KPIs de estadísticas de uso
- * /admin/reservas GET: listado de reservas
- * /admin/clases GET: listado de clases
- * /admin/usuarios GET: listado de usuarios
- * /admin/reservas/{id_reserva}/cancelar PATCH: cancela una reserva
- */
-Route::post('/admin/clases', [AdminClassController::class, 'store'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+/*
+* Administrador (solo rol Administrador)
+*
+* Gestión de clases, usuarios, salas, actividades, reservas e informes.
+*/
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
 
-Route::put('/admin/clases/{id_clase}', [AdminClassController::class, 'update'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Gestión de clases
+    Route::post('/clases', [AdminClassController::class, 'store']);
+    Route::put('/clases/{id_clase}', [AdminClassController::class, 'update']);
+    Route::delete('/clases/{id_clase}', [AdminClassController::class, 'destroy']);
 
-Route::delete('/admin/clases/{id_clase}', [AdminClassController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Gestión de usuarios
+    Route::post('/usuarios', [AdminUserController::class, 'store']);
+    Route::put('/usuarios/{id_usuario}', [AdminUserController::class, 'update']);
+    Route::delete('/usuarios/{id_usuario}', [AdminUserController::class, 'destroy']);
 
-Route::post('/admin/usuarios', [AdminUserController::class, 'store'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Catálogos (selectores del panel)
+    Route::get('/entrenadores', [AdminCatalogController::class, 'entrenadores']);
+    Route::get('/salas', [AdminCatalogController::class, 'salas']);
+    Route::get('/actividades', [AdminCatalogController::class, 'actividades']);
 
-Route::put('/admin/usuarios/{id_usuario}/rol', [AdminUserController::class, 'updateRole'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Gestión de salas
+    Route::post('/salas', [AdminSalaController::class, 'store']);
+    Route::put('/salas/{id_sala}', [AdminSalaController::class, 'update']);
+    Route::delete('/salas/{id_sala}', [AdminSalaController::class, 'destroy']);
 
-Route::put('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'update'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Gestión de actividades
+    Route::post('/actividades', [AdminActividadController::class, 'store']);
+    Route::put('/actividades/{id_actividad}', [AdminActividadController::class, 'update']);
+    Route::delete('/actividades/{id_actividad}', [AdminActividadController::class, 'destroy']);
 
-Route::delete('/admin/usuarios/{id_usuario}', [AdminUserController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Informes y resúmenes
+    Route::get('/informes', [ReportController::class, 'kpis']);
+    Route::get('/dashboard-summary', [AdminOverviewController::class, 'dashboardSummary']);
 
-Route::get('/admin/entrenadores', [AdminCatalogController::class, 'entrenadores'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Vistas globales (paginadas y filtrables)
+    Route::get('/reservas', [AdminOverviewController::class, 'reservas']);
+    Route::get('/clases', [AdminOverviewController::class, 'clases']);
+    Route::get('/usuarios', [AdminOverviewController::class, 'usuarios']);
 
-Route::get('/admin/salas', [AdminCatalogController::class, 'salas'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::post('/admin/salas', [AdminSalaController::class, 'store'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::put('/admin/salas/{id_sala}', [AdminSalaController::class, 'update'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::delete('/admin/salas/{id_sala}', [AdminSalaController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/actividades', [AdminCatalogController::class, 'actividades'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::post('/admin/actividades', [AdminActividadController::class, 'store'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::put('/admin/actividades/{id_actividad}', [AdminActividadController::class, 'update'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::delete('/admin/actividades/{id_actividad}', [AdminActividadController::class, 'destroy'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/informes', [ReportController::class, 'kpis'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/dashboard-summary', [AdminOverviewController::class, 'dashboardSummary'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/reservas', [AdminOverviewController::class, 'reservas'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::post('/admin/reservas', [AdminReservationController::class, 'store'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/clases', [AdminOverviewController::class, 'clases'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::get('/admin/usuarios', [AdminOverviewController::class, 'usuarios'])
-    ->middleware(['auth:sanctum', 'role:admin']);
-
-Route::patch('/admin/reservas/{id_reserva}/cancelar', [AdminOverviewController::class, 'cancelarReserva'])
-    ->middleware(['auth:sanctum', 'role:admin']);
+    // Acciones sobre reservas
+    Route::post('/reservas', [AdminReservationController::class, 'store']);
+    Route::patch('/reservas/{id_reserva}/cancelar', [AdminOverviewController::class, 'cancelarReserva']);
+});

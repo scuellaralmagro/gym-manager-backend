@@ -6,13 +6,33 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
+/**
+ * Validación del endpoint POST /api/admin/reservas.
+ *
+ * El administrador crea una reserva "forzada" para un cliente concreto.
+ * Además de comprobar que ambos IDs existen, restringe el id_usuario a
+ * cuentas con rol Cliente: no tiene sentido reservar clases para un
+ * entrenador o para otro administrador.
+ */
 class StoreAdminReservationRequest extends FormRequest
 {
+    /**
+     * Autoriza la petición.
+     *
+     * Ruta protegida por 'role:admin', por eso devolvemos true.
+     *
+     * @return bool Siempre true.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas de validación para crear una reserva desde el panel de admin.
+     *
+     * @return array<string, array<int, string>> Reglas para 'id_usuario' e 'id_clase'.
+     */
     public function rules(): array
     {
         return [
@@ -22,7 +42,13 @@ class StoreAdminReservationRequest extends FormRequest
     }
 
     /**
-     * Solo los clientes (id_rol = 3) pueden tener reservas.
+     * Validación extra tras las reglas principales.
+     *
+     * Solo los clientes (id_rol = 3) pueden tener reservas. Lo hacemos aquí
+     * porque necesitamos cargar al usuario tras el 'exists' para conocer
+     * su rol.
+     *
+     * @return array<int, \Closure> Cierres de validación aplicados tras rules().
      */
     public function after(): array
     {

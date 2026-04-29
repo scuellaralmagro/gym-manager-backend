@@ -486,8 +486,8 @@ function AsistenciaDonut({ data }: { data: AsistenciaResumen }) {
       </ul>
       <p className="text-[11px] leading-snug text-[rgba(4,14,32,0.45)]">
         El porcentaje se calcula sobre reservas ya decididas (asistidas +
-        canceladas) y excluye las próximas. Los «No Show» requerirían un
-        registro de asistencia explícito.
+        canceladas) y excluye las próximas. TBD: Implementar funcionalidad de
+        pasar lista de alumnos para hacer seguimiento de asistencia
       </p>
     </div>
   );

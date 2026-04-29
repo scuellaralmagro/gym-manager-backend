@@ -8,10 +8,21 @@ use App\Models\Actividad;
 use App\Models\Clase;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * CRUD de Actividades para el panel de administración.
+ *
+ * Las actividades son los "tipos" de clase (Yoga, Pilates, Zumba…). La FK
+ * clases.id_actividad usa ON DELETE CASCADE, así que un borrado directo
+ * arrastraría clases y reservas. Para no destruir datos sin querer,
+ * bloqueamos el borrado si la actividad tiene clases asociadas.
+ */
 class AdminActividadController extends Controller
 {
     /**
-     * CRUD de Actividades para el panel de administración.
+     * Crear una nueva actividad.
+     *
+     * @param  \App\Http\Requests\StoreActividadRequest  $request  Nombre (único) y descripción validados.
+     * @return \Illuminate\Http\JsonResponse                       Actividad creada + mensaje (201 Created).
      */
     public function store(StoreActividadRequest $request): JsonResponse
     {
@@ -23,6 +34,13 @@ class AdminActividadController extends Controller
         ], 201);
     }
 
+    /**
+     * Actualizar una actividad existente.
+     *
+     * @param  \App\Http\Requests\UpdateActividadRequest  $request        Datos validados (unique con ignore del propio id).
+     * @param  int                                        $id_actividad   ID de la actividad a editar.
+     * @return \Illuminate\Http\JsonResponse                              Actividad actualizada + mensaje (200 OK).
+     */
     public function update(UpdateActividadRequest $request, int $id_actividad): JsonResponse
     {
         $actividad = Actividad::findOrFail($id_actividad);
@@ -35,11 +53,14 @@ class AdminActividadController extends Controller
     }
 
     /**
-     * Borrado con salvaguarda explícita.
+     * Eliminar una actividad con salvaguarda explícita.
      *
-     * El FK de clases.id_actividad usa ON DELETE CASCADE, lo que en la práctica
-     * arrastraría clases y reservas (cascade en Reservas) sin confirmación. Para
-     * no destruir datos silenciosamente, bloqueamos el borrado si hay clases activas.
+     * Contamos primero las clases que usan esta actividad; si hay alguna,
+     * devolvemos 409 con un mensaje claro. Así evitamos que el admin borre
+     * sin querer todas las clases y reservas asociadas por cascade.
+     *
+     * @param  int  $id_actividad  ID de la actividad a borrar.
+     * @return \Illuminate\Http\JsonResponse  Mensaje de éxito (200), o 409 si tiene clases asociadas.
      */
     public function destroy(int $id_actividad): JsonResponse
     {

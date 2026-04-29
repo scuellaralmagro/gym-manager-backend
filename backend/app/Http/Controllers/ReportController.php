@@ -9,19 +9,34 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador de informes (KPIs) para el rol Administrador.
+ *
+ * Expone un único endpoint que concentra los indicadores clave de
+ * rendimiento del gimnasio. Todos los cálculos protegen contra divisiones
+ * por cero devolviendo 0 o null cuando no hay datos en el periodo.
+ */
 class ReportController extends Controller
 {
     /**
-     * Obtener KPIs del gimnasio (Admin).
+     * Calcular los KPIs del gimnasio.
      *
-     * Calcula tasa de ocupación, índice de cancelaciones, clientes únicos,
-     * media de reservas por clase, actividad más popular, hora punta y los
-     * agregados de la pantalla de métricas: reservas por día de la semana,
-     * reparto asistidas/próximas/canceladas y top-N de actividades.
+     * Admite filtros opcionales en query string:
+     *  - 'fecha_desde' / 'fecha_hasta' → rango de fechas (Y-m-d) usado por el dashboard.
+     *  - 'mes'                         → 1..12 (compatibilidad con la primera versión).
+     *  - 'anio'                        → año (p. ej. 2026).
+     *  - 'actividad'                   → id_actividad, para filtrar por tipo de clase.
      *
-     * Admite filtros de rango (`fecha_desde`/`fecha_hasta`) usados por el
-     * dashboard, y también `mes`/`anio`/`actividad` que mantengo por
-     * compatibilidad con las primeras iteraciones del endpoint.
+     * Devuelve:
+     *  - 'kpis'                     → tasa de ocupación, cancelaciones, media, clientes únicos, actividad más popular y hora punta.
+     *  - 'desglose'                 → totales brutos (clases, cupo, activas, canceladas).
+     *  - 'reservas_por_dia_semana'  → serie L–D con el total de reservas activas.
+     *  - 'asistencia'               → asistidas/próximas/canceladas + % asistencia.
+     *  - 'top_actividades'          → top 5 de actividades por reservas activas.
+     *  - 'filtros_aplicados'        → echo de los filtros recibidos.
+     *
+     * @param  \Illuminate\Http\Request  $request  Petición con los filtros en query string.
+     * @return \Illuminate\Http\JsonResponse       JSON con todos los bloques de KPIs.
      */
     public function kpis(Request $request): JsonResponse
     {
@@ -72,8 +87,8 @@ class ReportController extends Controller
             ->distinct('id_usuario')
             ->count('id_usuario');
 
-        // Protejo contra divisiones por cero: si no hay clases o reservas,
-        // devuelvo 0 en vez de lanzar un error
+        // Protección contra divisiones por cero: si no hay clases o reservas,
+        // devolvemos 0 en lugar de lanzar un error
         $tasaOcupacion = $cupoTotal > 0
             ? round(($reservasActivas / $cupoTotal) * 100, 2)
             : 0;
@@ -122,6 +137,7 @@ class ReportController extends Controller
         }
 
         // Reservas activas agrupadas por día de la semana de la clase.
+        // ISODOW de PostgreSQL → 1=Lunes ... 7=Domingo.
         $rowsDia = (clone $queryReservas)
             ->where('reservas.estado', 'Activa')
             ->join('clases', 'reservas.id_clase', '=', 'clases.id_clase')

@@ -5,13 +5,34 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validación del endpoint PUT /api/admin/usuarios/{id_usuario}.
+ *
+ * Se usa para que un administrador edite los datos de cualquier usuario.
+ * La contraseña es opcional (si se deja vacía se conserva la actual).
+ */
 class UpdateUserRequest extends FormRequest
 {
+    /**
+     * Autoriza la petición.
+     *
+     * Ruta protegida por 'role:admin', por eso devolvemos true.
+     *
+     * @return bool Siempre true.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Reglas de validación para actualizar un usuario.
+     *
+     * El email usa Rule::unique con ignore() para permitir que el propio
+     * usuario mantenga su email al guardarse sin tocarlo.
+     *
+     * @return array<string, array<int, string|\Illuminate\Validation\Rules\Unique>> Reglas por campo.
+     */
     public function rules(): array
     {
         $id = (int) $this->route('id_usuario');
@@ -32,6 +53,11 @@ class UpdateUserRequest extends FormRequest
         ];
     }
 
+    /**
+     * Mensajes personalizados de error.
+     *
+     * @return array<string, string> Mensajes por regla.
+     */
     public function messages(): array
     {
         return [

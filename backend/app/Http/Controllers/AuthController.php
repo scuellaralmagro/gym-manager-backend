@@ -8,15 +8,22 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * Controlador de autenticación
+ */
 class AuthController extends Controller
 {
     /**
      * Iniciar sesión.
      *
-     * Autentica al usuario con email y contraseña, revoca tokens anteriores
-     * y devuelve un nuevo Personal Access Token (Sanctum).
+     * Busca al usuario por email, comprueba la contraseña y, si coincide,
+     * revoca los tokens anteriores y emite uno nuevo. Revocar los anteriores
+     * nos asegura que solo haya una sesión activa a la vez por cuenta.
      *
      * @unauthenticated
+     *
+     * @param  \App\Http\Requests\LoginRequest  $request  Email y contraseña validados.
+     * @return \Illuminate\Http\JsonResponse              Token Bearer (200 OK) o mensaje de error (401).
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -28,7 +35,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Revoco tokens anteriores para garantizar una única sesión activa por dispositivo
+        // Revoco tokens anteriores para garantizar una única sesión activa por cuenta
         $usuario->tokens()->delete();
 
         $token = $usuario->createToken('api-token')->plainTextToken;
@@ -42,7 +49,10 @@ class AuthController extends Controller
     /**
      * Cerrar sesión.
      *
-     * Revoca el token utilizado en esta petición.
+     * Revoca el token Sanctum usado en esta petición
+     *
+     * @param  \Illuminate\Http\Request  $request  Petición autenticada vía Sanctum.
+     * @return \Illuminate\Http\JsonResponse       Mensaje de confirmación (200 OK).
      */
     public function logout(Request $request): JsonResponse
     {
