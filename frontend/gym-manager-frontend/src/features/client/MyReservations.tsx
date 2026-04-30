@@ -24,9 +24,9 @@ import api from "../../lib/axios";
 import { cn } from "../../lib/utils";
 import type { CollectionResponse, MiReserva } from "../../types/cliente";
 
-// Pantalla "Mis Reservas" del cliente. Dos pestañas: Próximas e Historial.
-
-// Tiempo mínimo antes del inicio de la clase para permitir cancelar la reserva
+/**
+ * Tiempo mínimo antes del inicio de la clase para permitir cancelar la reserva.
+ */
 const VENTANA_CANCELACION_MS = 2 * 60 * 60 * 1000; // 2 horas
 
 function parseClaseInicio(fecha: string, hora: string): number {
@@ -41,6 +41,9 @@ function toDate(fecha: string, hora: string): Date {
   return new Date(y, m - 1, d, hh ?? 0, mm ?? 0, 0, 0);
 }
 
+/**
+ * Carga las reservas del cliente autenticado.
+ */
 async function fetchMisReservas(): Promise<MiReserva[]> {
   const { data } = await api.get<CollectionResponse<MiReserva>>(
     "/api/reservas/mis-reservas",
@@ -48,6 +51,14 @@ async function fetchMisReservas(): Promise<MiReserva[]> {
   return data.data;
 }
 
+/**
+ * Pantalla de reservas del cliente.
+ *
+ * @remarks
+ * Divide las reservas en próximas e historial con estado derivado por `useMemo`.
+ * TanStack Query llama a `GET /api/reservas/mis-reservas`; la mutación de
+ * cancelación usa `PATCH /api/reservas/{id}/cancelar` con actualización optimista.
+ */
 export default function MyReservations() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -227,6 +238,9 @@ type ReservasListaProps = {
   renderCard: (r: MiReserva) => React.ReactNode;
 };
 
+/**
+ * Lista reutilizable para pestañas de próximas reservas e historial.
+ */
 function ReservasLista({
   reservas,
   loading,
@@ -260,6 +274,9 @@ type ReservaCardProps = {
   historial?: boolean;
 };
 
+/**
+ * Tarjeta individual de reserva con estado, horario y acción de cancelación.
+ */
 function ReservaCard({
   reserva,
   nowTs,

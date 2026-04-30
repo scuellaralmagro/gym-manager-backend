@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import api, { AUTH_TOKEN_STORAGE_KEY } from "../../lib/axios";
+import api, { AUTH_TOKEN_STORAGE_KEY, setApiAuthToken } from "../../lib/axios";
 import { handleLaravelErrors } from "../../lib/handleLaravelErrors";
 import { cn } from "../../lib/utils";
 import { useAuthStore, type AuthUser } from "../../store/authStore";
@@ -46,6 +46,14 @@ type PerfilResponse = {
   };
 };
 
+/**
+ * Pantalla de login de GymManager.
+ *
+ * @remarks
+ * Maneja el formulario de email y contraseña con React Hook Form. Lanza
+ * `GET /sanctum/csrf-cookie`, `POST /api/login` y `GET /api/perfil`; después
+ * guarda token y usuario en Zustand y redirige según el rol.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -71,7 +79,7 @@ export default function Login() {
       );
 
       window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, loginData.token);
-      api.defaults.headers.common.Authorization = `Bearer ${loginData.token}`;
+      setApiAuthToken(loginData.token);
 
       const { data: perfil } = await api.get<PerfilResponse>("/api/perfil");
       const idRol = ROLE_NAME_TO_ID[perfil.data.rol] ?? 0;

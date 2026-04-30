@@ -49,6 +49,12 @@ type ClasesQueryParams = {
   direction: SortDirection;
 };
 
+/**
+ * Obtiene el listado paginado de clases para administración.
+ *
+ * @param params - Filtros, paginación y ordenación de la tabla.
+ * @returns Página de clases recibida de `/api/admin/clases`.
+ */
 async function fetchClases(
   params: ClasesQueryParams,
 ): Promise<PaginatedResponse<AdminClase>> {
@@ -69,6 +75,9 @@ async function fetchClases(
   return data;
 }
 
+/**
+ * Carga los entrenadores usados por el filtro de la tabla.
+ */
 async function fetchEntrenadores(): Promise<EntrenadorOption[]> {
   const { data } = await api.get<CatalogResponse<EntrenadorOption>>(
     "/api/admin/entrenadores",
@@ -78,6 +87,15 @@ async function fetchEntrenadores(): Promise<EntrenadorOption[]> {
 
 const DEFAULT_PER_PAGE = 10;
 
+/**
+ * Pantalla de gestión de oferta y clases del administrador.
+ *
+ * @remarks
+ * Maneja estados de filtros (`page`, fechas, entrenador, ordenación) y modales
+ * (`dialogClase`, `salasOpen`, `actividadesOpen`). TanStack Query consulta
+ * `/api/admin/clases` y `/api/admin/entrenadores`; las mutaciones borran clases
+ * con `DELETE /api/admin/clases/{id}` e invalidan los listados afectados.
+ */
 export default function ClassManagement() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -454,7 +472,9 @@ export default function ClassManagement() {
   );
 }
 
-// Componente para el encabezado de las columnas ordenables
+/**
+ * Encabezado de tabla que permite cambiar la ordenación.
+ */
 function SortableHeader({
   label,
   active,
@@ -483,7 +503,9 @@ function SortableHeader({
   );
 }
 
-// Componente para la celda de la fecha y hora
+/**
+ * Celda de tabla que muestra fecha y franja horaria de una clase.
+ */
 function FechaHoraCell({ clase }: { clase: AdminClase }) {
   const [y, m, d] = clase.fecha.split("-").map(Number);
   const [hiH, hiM] = clase.hora_inicio.split(":").map(Number);
@@ -508,7 +530,9 @@ function FechaHoraCell({ clase }: { clase: AdminClase }) {
   );
 }
 
-// Componente para la celda del cupo
+/**
+ * Celda de ocupación con contador y barra visual.
+ */
 function CupoCell({ clase }: { clase: AdminClase }) {
   const ocupadas = clase.reservas_activas;
   const total = clase.cupo_maximo;
@@ -533,7 +557,9 @@ function CupoCell({ clase }: { clase: AdminClase }) {
   );
 }
 
-// Componente para las acciones de las filas
+/**
+ * Menú de acciones de una fila de clase.
+ */
 function RowActions({
   clase,
   onEdit,

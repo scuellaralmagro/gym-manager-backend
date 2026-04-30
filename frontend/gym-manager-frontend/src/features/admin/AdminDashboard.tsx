@@ -21,8 +21,11 @@ import {
 import api from "../../lib/axios";
 import type { DashboardSummaryResponse } from "../../types/dashboard";
 
-// Pantalla de INICIO del administrador (landing tras login).
-
+/**
+ * Carga el resumen semanal del dashboard de administración.
+ *
+ * @returns KPIs, rango de fechas y ocupación semanal recibidos desde Axios.
+ */
 async function fetchDashboardSummary(): Promise<DashboardSummaryResponse> {
   const { data } = await api.get<DashboardSummaryResponse>(
     "/api/admin/dashboard-summary",
@@ -30,6 +33,14 @@ async function fetchDashboardSummary(): Promise<DashboardSummaryResponse> {
   return data;
 }
 
+/**
+ * Pantalla inicial del administrador.
+ *
+ * @remarks
+ * Usa TanStack Query (libreria para peticiones a la API) con la clave `["admin", "dashboard-summary"]` para hacer la petición
+ * `/api/admin/dashboard-summary`. Maneja los estados `data`, `isLoading`,
+ * `isError` y `refetch` para pintar KPIs, gráfico de ocupación o error.
+ */
 export default function AdminDashboard() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "dashboard-summary"] as const,
@@ -91,13 +102,17 @@ export default function AdminDashboard() {
   );
 }
 
-// Tarjetas de KPIs
-
 type KpiCardsProps = {
   data: DashboardSummaryResponse["kpis"] | undefined;
   loading: boolean;
 };
 
+/**
+ * Muestra las tarjetas de indicadores principales del dashboard.
+ *
+ * @param data - KPIs devueltos por la API.
+ * @param loading - Indica si la query sigue cargando.
+ */
 function KpiCards({ data, loading }: KpiCardsProps) {
   const reservasActivas = loading ? "—" : String(data?.reservas_activas ?? 0);
   const llenadoMedio = loading ? "—" : `${data?.llenado_medio ?? 0}%`;
@@ -148,13 +163,17 @@ function KpiCard({
   );
 }
 
-// Gráfico de ocupación
-
 type OcupacionChartProps = {
   data: DashboardSummaryResponse["ocupacion_semanal"];
   loading: boolean;
 };
 
+/**
+ * Dibuja el gráfico de ocupación semanal por actividad.
+ *
+ * @param data - Lista de ocupación por actividad.
+ * @param loading - Estado de carga de la query principal.
+ */
 function OcupacionChart({ data, loading }: OcupacionChartProps) {
   if (loading) {
     return (

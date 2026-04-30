@@ -25,12 +25,29 @@ type ClassFormDialogProps = {
   clase: AdminClase | null;
 };
 
+/**
+ * Carga catálogos usados en el formulario de clases.
+ *
+ * @param url - Endpoint del catálogo en el backend Laravel.
+ * @returns Lista tipada recibida desde Axios.
+ */
 async function fetchCatalog<T>(url: string): Promise<T[]> {
   const { data } = await api.get<CatalogResponse<T>>(url);
   return data.data;
 }
 
-// Dialogo para programar/editar una clase
+/**
+ * Diálogo para programar o editar una clase.
+ *
+ * @param open - Indica si el diálogo se muestra.
+ * @param onClose - Callback para cerrarlo al guardar o cancelar.
+ * @param clase - Clase a editar. Si es `null`, el formulario crea una nueva.
+ *
+ * @remarks
+ * Usa estados derivados como `isEdit`, `idSala` y `selectedSala`. Carga salas,
+ * actividades y entrenadores con TanStack Query. Las modificaciones se hacen con `POST`/`PUT` sobre
+ * `/api/admin/clases`.
+ */
 export default function ClassFormDialog({
   open,
   onClose,

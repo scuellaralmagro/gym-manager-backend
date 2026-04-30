@@ -2,8 +2,6 @@ import { z } from "zod";
 
 import type { SalaOption } from "../../types/clase";
 
-// Esquemas Zod para validar los datos de creación y edición de clases
-
 const TIME_REGEX = /^\d{2}:\d{2}(?::\d{2})?$/;
 
 function parseDateISO(date: string): Date | null {
@@ -12,10 +10,19 @@ function parseDateISO(date: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
+/**
+ * Opciones de validación para el formulario de clases.
+ */
 export type ClassSchemaOptions = {
   requireFutureDate?: boolean;
 };
 
+/**
+ * Crea el esquema Zod para alta y edición de clases.
+ *
+ * @param salas - Catálogo de salas usado para validar que el cupo no supere la capacidad.
+ * @param options - Permite exigir o no fecha futura según sea creación o edición.
+ */
 export function createClassSchema(
   salas: SalaOption[],
   options: ClassSchemaOptions = {},
@@ -74,4 +81,7 @@ export function createClassSchema(
     });
 }
 
+/**
+ * Valores del formulario de clase inferidos desde el esquema Zod.
+ */
 export type CreateClassValues = z.infer<ReturnType<typeof createClassSchema>>;

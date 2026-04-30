@@ -33,6 +33,11 @@ const actividadSchema = z.object({
 
 type ActividadFormValues = z.infer<typeof actividadSchema>;
 
+/**
+ * Recupera el catálogo de actividades.
+ *
+ * @returns Lista de actividades recibida de `/api/admin/actividades`.
+ */
 async function fetchActividades(): Promise<ActividadOption[]> {
   const { data } = await api.get<CatalogResponse<ActividadOption>>(
     "/api/admin/actividades",
@@ -40,6 +45,17 @@ async function fetchActividades(): Promise<ActividadOption[]> {
   return data.data;
 }
 
+/**
+ * Diálogo para crear, editar y borrar actividades del catálogo.
+ *
+ * @param open - Controla si el modal está visible.
+ * @param onClose - Cierra el modal desde el componente padre.
+ *
+ * @remarks
+ * Mantiene `editing` como estado local para alternar entre alta y edición.
+ * TanStack Query carga actividades con `GET /api/admin/actividades`. Las
+ * modificaciones se hacen con `POST`/`PUT`/`DELETE` sobre `/api/admin/actividades`.
+ */
 export default function ActividadManagementDialog({
   open,
   onClose,
@@ -179,7 +195,8 @@ export default function ActividadManagementDialog({
             Gestionar actividades
           </h2>
           <p className="mt-1 text-sm text-[rgba(4,14,32,0.69)]">
-            Administra el catálogo de disciplinas que pueden asignarse a las clases.
+            Administra el catálogo de disciplinas que pueden asignarse a las
+            clases.
           </p>
         </header>
 
@@ -215,7 +232,9 @@ export default function ActividadManagementDialog({
                 {...register("nombre")}
               />
               {errors.nombre && (
-                <p className="text-xs text-[#b3261e]">{errors.nombre.message}</p>
+                <p className="text-xs text-[#b3261e]">
+                  {errors.nombre.message}
+                </p>
               )}
             </div>
 

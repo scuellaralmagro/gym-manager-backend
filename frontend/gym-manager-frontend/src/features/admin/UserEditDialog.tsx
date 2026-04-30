@@ -42,6 +42,17 @@ type UserEditDialogProps = {
   onClose: () => void;
 };
 
+/**
+ * Diálogo para editar usuarios existentes.
+ *
+ * @param usuario - Usuario seleccionado en la tabla.
+ * @param open - Indica si el modal está visible.
+ * @param onClose - Cierra el modal y limpia la selección.
+ *
+ * @remarks
+ * Lee `authUser` desde Zustand para impedir que un admin cambie su propio rol.
+ * La modificación se hace con `PUT` sobre `/api/admin/usuarios/{id}` y se refresca la tabla.
+ */
 export default function UserEditDialog({
   usuario,
   open,

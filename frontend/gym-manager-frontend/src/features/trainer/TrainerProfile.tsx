@@ -24,8 +24,6 @@ import { handleLaravelErrors } from "../../lib/handleLaravelErrors";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
 
-// Pantalla "Mi perfil" del entrenador
-
 const PASSWORD_COMPLEXITY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
 const profileSchema = z
@@ -101,6 +99,9 @@ type PerfilResponse = {
 
 type EspecialidadesResponse = { data: string[] };
 
+/**
+ * Construye iniciales para el avatar del entrenador.
+ */
 function buildInitials(nombre: string, apellidos: string): string {
   const n = nombre.trim().charAt(0);
   const a = apellidos.trim().charAt(0);
@@ -108,6 +109,9 @@ function buildInitials(nombre: string, apellidos: string): string {
   return initials || "?";
 }
 
+/**
+ * Carga las especialidades calculadas del entrenador.
+ */
 async function fetchEspecialidades(): Promise<string[]> {
   const { data } = await api.get<EspecialidadesResponse>(
     "/api/entrenador/especialidades",
@@ -115,6 +119,14 @@ async function fetchEspecialidades(): Promise<string[]> {
   return data.data;
 }
 
+/**
+ * Pantalla de perfil del entrenador.
+ *
+ * @remarks
+ * Maneja el formulario de datos y contraseña, lee/actualiza usuario en Zustand
+ * y consulta especialidades con `GET /api/entrenador/especialidades`. La
+ * edición del perfil lanza `PUT /api/perfil`.
+ */
 export default function TrainerProfile() {
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
@@ -462,6 +474,9 @@ type FieldGroupProps = {
   children: React.ReactNode;
 };
 
+/**
+ * Agrupa label, hint, campo y error de formulario.
+ */
 function FieldGroup({
   id,
   label,

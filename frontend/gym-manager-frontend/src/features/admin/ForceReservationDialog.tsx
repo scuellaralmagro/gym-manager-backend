@@ -37,6 +37,12 @@ const forceSchema = z.object({
 
 type ForceReservationValues = z.infer<typeof forceSchema>;
 
+/**
+ * Retrasa el valor de búsqueda para evitar peticiones por cada tecla.
+ *
+ * @param value - Valor original que cambia con cada pulsación.
+ * @param delay - Milisegundos de espera antes de publicar el valor.
+ */
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -54,6 +60,11 @@ function todayIso(): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Busca clientes por nombre, apellidos o email.
+ *
+ * @param search - Texto introducido por administración.
+ */
 async function searchClientes(search: string): Promise<Usuario[]> {
   const { data } = await api.get<PaginatedResponse<Usuario>>(
     "/api/admin/usuarios",
@@ -68,6 +79,9 @@ async function searchClientes(search: string): Promise<Usuario[]> {
   return data.data;
 }
 
+/**
+ * Carga próximas clases disponibles.
+ */
 async function fetchUpcomingClases(): Promise<AdminClase[]> {
   // Recupero las próximas 50 clases (ordenadas por fecha asc en backend).
   const { data } = await api.get<PaginatedResponse<AdminClase>>(
@@ -84,6 +98,18 @@ async function fetchUpcomingClases(): Promise<AdminClase[]> {
   return data.data;
 }
 
+/**
+ * Diálogo para que el admin cree una reserva manual.
+ *
+ * @param open - Controla la visibilidad del modal.
+ * @param onClose - Cierra el flujo al cancelar o guardar.
+ *
+ * @remarks
+ * Maneja `clienteSearch`, `debouncedClienteSearch` y `pinnedCliente` para no
+ * perder el cliente seleccionado. Las peticiones se hacen con `GET` sobre
+ * `/api/admin/usuarios` y `/api/admin/clases`. Las modificaciones se hacen con
+ * `POST` sobre `/api/admin/reservas`.
+ */
 export default function ForceReservationDialog({
   open,
   onClose,
@@ -146,9 +172,7 @@ export default function ForceReservationDialog({
   const clientes = useMemo(() => {
     const base = rawClientes ?? [];
     if (!pinnedCliente) return base;
-    const exists = base.some(
-      (c) => c.id_usuario === pinnedCliente.id_usuario,
-    );
+    const exists = base.some((c) => c.id_usuario === pinnedCliente.id_usuario);
     return exists ? base : [pinnedCliente, ...base];
   }, [rawClientes, pinnedCliente]);
 
@@ -171,7 +195,10 @@ export default function ForceReservationDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "reservas"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "clases"] });
-      toast.success("Reserva creada", "La reserva se ha forzado correctamente.");
+      toast.success(
+        "Reserva creada",
+        "La reserva se ha forzado correctamente.",
+      );
       onClose();
     },
   });

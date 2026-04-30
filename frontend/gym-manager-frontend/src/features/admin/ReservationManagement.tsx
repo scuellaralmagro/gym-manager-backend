@@ -30,11 +30,11 @@ import type { AdminReserva, ReservaEstado } from "../../types/reserva";
 import type { PaginatedResponse } from "../../types/usuario";
 import ForceReservationDialog from "./ForceReservationDialog";
 
-// Pantalla GESTION DE RESERVAS (admin)
-
 const DEFAULT_PER_PAGE = 10;
 
-// Debouncer
+/**
+ * Retrasa el valor de búsqueda para evitar peticiones por cada tecla.
+ */
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -54,6 +54,11 @@ type ReservasQueryParams = {
   estado: EstadoFiltro;
 };
 
+/**
+ * Obtiene reservas paginadas.
+ *
+ * @param params - Página, tamaño, búsqueda y estado del filtro.
+ */
 async function fetchReservas({
   page,
   perPage,
@@ -74,6 +79,14 @@ async function fetchReservas({
   return data;
 }
 
+/**
+ * Pantalla de gestión de reservas del administrador.
+ *
+ * @remarks
+ * Maneja `page`, `search`, `estado` y `forceDialogOpen`. TanStack Query llama a
+ * `GET /api/admin/reservas`. Las modificaciones se hacen con `PATCH` sobre
+ * `/api/admin/reservas/{id}/cancelar`.
+ */
 export default function ReservationManagement() {
   const queryClient = useQueryClient();
   const toast = useToast();

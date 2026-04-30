@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# GymManager Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web de GymManager, una aplicación para gestionar usuarios, clases, reservas, perfiles y métricas de un gimnasio.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- Vite
+- TypeScript
+- Zustand para el estado de autenticación
+- TanStack Query para peticiones, caché e invalidaciones
+- Axios como cliente HTTP
+- Tailwind CSS para estilos
 
-## React Compiler
+## Separación Backend/Frontend
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+El proyecto separa backend y frontend para que cada parte tenga una responsabilidad clara. El backend Laravel expone la API, valida reglas de negocio y gestiona los datos. El frontend React se centra en la experiencia de usuario: pantallas, formularios, calendarios, tablas y feedback visual.
 
-## Expanding the ESLint configuration
+Esta separación facilita trabajar en paralelo, probar cada capa por separado y cambiar la interfaz sin tocar la lógica principal del servidor.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Requisitos
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js 20 o superior recomendado
+- npm
+- Backend de GymManager levantado y accesible
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Configuración Local
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Instala las dependencias:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Crea un archivo `.env` en la raíz de este frontend:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:8000
 ```
+
+Levanta el servidor de desarrollo:
+
+```bash
+npm run dev
+```
+
+Por defecto, Vite mostrará la URL local en consola, normalmente `http://localhost:5173`.
+
+## Scripts Disponibles
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
+
+`npm run build` compila TypeScript y genera la versión de producción en `dist`.

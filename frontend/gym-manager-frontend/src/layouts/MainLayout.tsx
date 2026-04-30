@@ -7,7 +7,7 @@ import {
   ROLE_ADMIN,
   type NavItem,
 } from "../config/navigation";
-import api, { AUTH_TOKEN_STORAGE_KEY } from "../lib/axios";
+import api, { AUTH_TOKEN_STORAGE_KEY, clearApiAuthToken } from "../lib/axios";
 import { cn } from "../lib/utils";
 import { useAuthStore } from "../store/authStore";
 
@@ -29,10 +29,11 @@ export default function MainLayout() {
   const handleLogout = async () => {
     try {
       await api.post("/api/logout");
-    } catch {
+    } catch (error) {
+      void error;
     } finally {
       window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-      delete api.defaults.headers.common.Authorization;
+      clearApiAuthToken();
       logout();
       navigate("/login", { replace: true });
     }

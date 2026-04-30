@@ -17,10 +17,11 @@ import type {
   EntrenadorClase,
 } from "../../types/entrenador";
 
-// Pantalla Inicio del entrenador
-
 type CollectionResponse<T> = { data: T[] };
 
+/**
+ * Carga la agenda próxima del entrenador autenticado.
+ */
 async function fetchAgenda(): Promise<EntrenadorClase[]> {
   const { data } = await api.get<CollectionResponse<EntrenadorClase>>(
     "/api/entrenador/agenda",
@@ -28,6 +29,11 @@ async function fetchAgenda(): Promise<EntrenadorClase[]> {
   return data.data;
 }
 
+/**
+ * Carga los alumnos reservados para una clase concreta.
+ *
+ * @param idClase - Identificador de la clase seleccionada.
+ */
 async function fetchAsistencia(idClase: number): Promise<AsistenciaItem[]> {
   const { data } = await api.get<CollectionResponse<AsistenciaItem>>(
     `/api/clases/${idClase}/asistencia`,
@@ -48,6 +54,14 @@ function formatFechaLarga(fecha: string): string {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
+/**
+ * Pantalla inicial del entrenador.
+ *
+ * @remarks
+ * Maneja `idClaseSelManual` para recordar la clase seleccionada. TanStack Query
+ * llama a `GET /api/entrenador/agenda` y, al seleccionar una clase,
+ * `GET /api/clases/{id}/asistencia`.
+ */
 export default function TrainerDashboard() {
   const agendaQuery = useQuery({
     queryKey: ["entrenador", "agenda"] as const,
@@ -104,6 +118,9 @@ type AgendaColumnaProps = {
   onSeleccionar: (id: number) => void;
 };
 
+/**
+ * Columna de clases próximas asignadas al entrenador.
+ */
 function AgendaColumna({
   loading,
   error,
@@ -232,6 +249,9 @@ type AsistenciaPanelProps = {
   clase: EntrenadorClase;
 };
 
+/**
+ * Panel de alumnos de la clase seleccionada.
+ */
 function AsistenciaPanel({ clase }: AsistenciaPanelProps) {
   const asistenciaQuery = useQuery({
     queryKey: ["entrenador", "asistencia", clase.id_clase] as const,

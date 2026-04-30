@@ -33,13 +33,26 @@ const salaSchema = z.object({
 
 type SalaFormValues = z.infer<typeof salaSchema>;
 
+/**
+ * Recupera el catálogo de salas del centro.
+ */
 async function fetchSalas(): Promise<SalaOption[]> {
-  const { data } = await api.get<CatalogResponse<SalaOption>>("/api/admin/salas");
+  const { data } =
+    await api.get<CatalogResponse<SalaOption>>("/api/admin/salas");
   return data.data;
 }
 
-// Dialogo para gestionar las salas del centro
-
+/**
+ * Diálogo para gestionar las salas del centro.
+ *
+ * @param open - Controla la visibilidad del diálogo.
+ * @param onClose - Cierra el diálogo al cancelar o guardar.
+ *
+ * @remarks
+ * Maneja `editing` para crear o editar salas. Las peticiones se hacen con `GET` sobre
+ * `/api/admin/salas`. Las modificaciones se hacen con `POST`, `PUT` y `DELETE` sobre
+ * el mismo recurso.
+ */
 export default function SalaManagementDialog({
   open,
   onClose,
@@ -172,7 +185,9 @@ export default function SalaManagementDialog({
       />
       <div className="relative flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#e0e2e6] bg-white shadow-[rgba(15,48,106,0.12)_0px_10px_30px]">
         <header className="border-b border-[#e0e2e6] px-6 py-4">
-          <h2 className="text-lg font-medium tracking-tight">Gestionar salas</h2>
+          <h2 className="text-lg font-medium tracking-tight">
+            Gestionar salas
+          </h2>
           <p className="mt-1 text-sm text-[rgba(4,14,32,0.69)]">
             Define el inventario físico del centro: nombre de la sala y aforo.
           </p>
@@ -209,7 +224,9 @@ export default function SalaManagementDialog({
                   {...register("nombre")}
                 />
                 {errors.nombre && (
-                  <p className="text-xs text-[#b3261e]">{errors.nombre.message}</p>
+                  <p className="text-xs text-[#b3261e]">
+                    {errors.nombre.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-1.5">

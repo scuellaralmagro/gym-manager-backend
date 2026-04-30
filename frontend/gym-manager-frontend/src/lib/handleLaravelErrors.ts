@@ -1,18 +1,27 @@
 import { isAxiosError } from "axios";
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 
-// Funcion para mapear los errores de Laravel a los campos del formulario
-
 type LaravelValidationPayload = {
   message?: string;
   errors?: Record<string, string[]>;
 };
 
+/**
+ * Opciones para decidir qué errores de Laravel se pintan en el formulario.
+ */
 export type HandleLaravelErrorsOptions<TFieldValues extends FieldValues> = {
   allowedFields?: Path<TFieldValues>[];
   includeRootMessage?: boolean;
 };
 
+/**
+ * Mapea respuestas 422 de Laravel a errores de React Hook Form (libreria para formularios).
+ *
+ * @param error - Error capturado en una petición Axios.
+ * @param setError - Función de React Hook Form para marcar campos con error.
+ * @param options - Lista opcional de campos permitidos y mensaje raíz.
+ * @returns `true` si el error era de validación y se ha gestionado.
+ */
 export function handleLaravelErrors<TFieldValues extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,

@@ -25,8 +25,6 @@ import type {
   TopActividad,
 } from "../../types/informe";
 
-// Pantalla INFORMES Y METRICAS (admin)
-
 const ASISTENCIA_COLORS = {
   asistidas: "#0f5132",
   proximas: "#1b61c9",
@@ -66,6 +64,12 @@ function defaultRange(): DateRange {
   };
 }
 
+/**
+ * Carga el informe de métricas para el rango indicado.
+ *
+ * @param range - Fechas `fechaDesde` y `fechaHasta` usadas como filtros.
+ * @returns KPIs, desglose y series para gráficas.
+ */
 async function fetchInforme(range: DateRange): Promise<InformeResponse> {
   const { data } = await api.get<InformeResponse>("/api/admin/informes", {
     params: {
@@ -76,6 +80,14 @@ async function fetchInforme(range: DateRange): Promise<InformeResponse> {
   return data;
 }
 
+/**
+ * Pantalla de informes y métricas del administrador.
+ *
+ * @remarks
+ * Mantiene `range` como estado principal y valida que la fecha desde no supere
+ * la fecha hasta. Usa TanStack Query con `GET /api/admin/informes` para pintar
+ * KPIs, barras de reservas, donut de asistencia y ranking de actividades.
+ */
 export default function MetricsDashboard() {
   const [range, setRange] = useState<DateRange>(defaultRange);
 
@@ -166,14 +178,15 @@ export default function MetricsDashboard() {
   );
 }
 
-// Filtro de periodo (fecha desde y hasta)
-
 type DateRangeFilterProps = {
   range: DateRange;
   onChange: (range: DateRange) => void;
   invalid: boolean;
 };
 
+/**
+ * Selector de fechas y presets rápidos para filtrar informes.
+ */
 function DateRangeFilter({ range, onChange, invalid }: DateRangeFilterProps) {
   const presets = useMemo(() => buildPresets(), []);
 
@@ -275,8 +288,9 @@ function buildPresets(): PresetDef[] {
   ];
 }
 
-// Tarjetas de KPIs
-
+/**
+ * Rejilla de KPIs calculados por el backend.
+ */
 function KpiGrid({ data }: { data: InformeResponse }) {
   const { kpis, desglose } = data;
 
@@ -348,8 +362,9 @@ function KpiCard({
   );
 }
 
-// Gráfico de barras (reservas por día de la semana)
-
+/**
+ * Gráfico de barras con reservas activas agrupadas por día de la semana.
+ */
 function ReservasBarChart({ data }: { data: ReservaPorDiaSemana[] }) {
   const total = data.reduce((acc, item) => acc + item.total, 0);
 
@@ -412,9 +427,13 @@ function expandDayLabel(label: string): string {
   return map[label] ?? label;
 }
 
-// Pie chart de asistencia
-// TODO: Implementar funcionalidad de pasar lista de alumnos para hacer seguimiento de asistencia
-
+/**
+ * Gráfico circular de asistencia.
+ *
+ * @remarks
+ * La asistencia real queda preparada visualmente (distinguiendo entre reservas activas y canceladas, pero no asistidas),
+ * pero la funcionalidad de pasar lista todavía se muestra como funcionalidad pendiente en la interfaz ya que no está implementada.
+ */
 function AsistenciaDonut({ data }: { data: AsistenciaResumen }) {
   const chartData = [
     { key: "asistidas", name: "Asistidas", value: data.asistidas },
@@ -493,8 +512,9 @@ function AsistenciaDonut({ data }: { data: AsistenciaResumen }) {
   );
 }
 
-// Tabla de actividades más demandadas
-
+/**
+ * Tabla con el ranking de actividades más demandadas.
+ */
 function TopActividadesTable({ data }: { data: TopActividad[] }) {
   const maxReservas = data[0]?.reservas ?? 0;
 

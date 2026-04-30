@@ -24,8 +24,6 @@ import { handleLaravelErrors } from "../../lib/handleLaravelErrors";
 import { cn } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
 
-// Pantalla "Mi perfil"
-
 const PASSWORD_COMPLEXITY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
 const profileSchema = z
@@ -100,7 +98,9 @@ type PerfilResponse = {
   };
 };
 
-// Construye las iniciales del nombre y apellidos del usuario (para la "foto" del perfil)
+/**
+ * Construye las iniciales usadas como avatar cuando no hay foto real.
+ */
 function buildInitials(nombre: string, apellidos: string): string {
   const n = nombre.trim().charAt(0);
   const a = apellidos.trim().charAt(0);
@@ -108,6 +108,13 @@ function buildInitials(nombre: string, apellidos: string): string {
   return initials || "?";
 }
 
+/**
+ * Pantalla de perfil del cliente.
+ *
+ * @remarks
+ * Lee y actualiza el usuario en Zustand. Maneja el formulario de datos
+ * personales y contraseña con React Hook Form.
+ */
 export default function ClientProfile() {
   const toast = useToast();
   const user = useAuthStore((s) => s.user);

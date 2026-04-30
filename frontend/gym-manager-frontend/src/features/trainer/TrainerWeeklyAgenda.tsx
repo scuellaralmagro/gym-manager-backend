@@ -24,8 +24,6 @@ import api from "../../lib/axios";
 import { cn } from "../../lib/utils";
 import type { EntrenadorClase } from "../../types/entrenador";
 
-// Pantalla "Mi Agenda" del entrenador
-
 const locales = { es };
 
 const localizer = dateFnsLocalizer({
@@ -77,6 +75,11 @@ type CollectionResponse<T> = { data: T[] };
 
 type RangoFechas = { desde: string; hasta: string };
 
+/**
+ * Carga la agenda del entrenador para un rango de fechas.
+ *
+ * @param rango - Fechas `desde` y `hasta` enviadas al backend.
+ */
 async function fetchAgenda(rango: RangoFechas): Promise<EntrenadorClase[]> {
   const { data } = await api.get<CollectionResponse<EntrenadorClase>>(
     "/api/entrenador/agenda",
@@ -85,7 +88,9 @@ async function fetchAgenda(rango: RangoFechas): Promise<EntrenadorClase[]> {
   return data.data;
 }
 
-// Rango por defecto al montar: semana laboral actual (L-V)
+/**
+ * Calcula el rango inicial de semana laboral actual, de lunes a viernes.
+ */
 function rangoSemanaLaboralInicial(): RangoFechas {
   const hoy = new Date();
   const inicio = startOfWeek(hoy, { weekStartsOn: 1 });
@@ -96,13 +101,23 @@ function rangoSemanaLaboralInicial(): RangoFechas {
   };
 }
 
-// Parsea yyyy-mm-dd + HH:mm[:ss] a Date local
+/**
+ * Parsea fecha y hora de clase a `Date` local.
+ */
 function parseClaseFecha(fecha: string, hora: string): Date {
   const [y, m, d] = fecha.split("-").map(Number);
   const [hh, mm] = hora.split(":").map(Number);
   return new Date(y, m - 1, d, hh ?? 0, mm ?? 0, 0, 0);
 }
 
+/**
+ * Agenda semanal del entrenador.
+ *
+ * @remarks
+ * Maneja `view`, `date` y `rango` para sincronizar React Big Calendar con la
+ * API. TanStack Query llama a `GET /api/entrenador/agenda` con parámetros
+ * `desde` y `hasta`.
+ */
 export default function TrainerWeeklyAgenda() {
   const [view, setView] = useState<View>(Views.WORK_WEEK);
   const [date, setDate] = useState<Date>(() => new Date());
@@ -278,7 +293,9 @@ export default function TrainerWeeklyAgenda() {
   );
 }
 
-// Tarjeta personalizada dentro de cada slot del calendario
+/**
+ * Evento visual dentro del calendario del entrenador.
+ */
 function CustomTrainerEvent({ event }: EventProps<TrainerEvento>) {
   const navigate = useNavigate();
 

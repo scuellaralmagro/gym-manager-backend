@@ -50,6 +50,16 @@ const DEFAULT_VALUES: CreateFormValues = {
   password: "",
 };
 
+/**
+ * Diálogo para dar de alta usuarios desde administración.
+ *
+ * @param open - Controla la visibilidad del diálogo.
+ * @param onClose - Cierra el diálogo al cancelar o guardar.
+ *
+ * @remarks
+ * No usa estado local propio salvo el formulario de React Hook Form. La modificación
+ * se hace con `POST` sobre `/api/admin/usuarios` y se refresca la lista de usuarios y el dashboard.
+ */
 export default function UserCreateDialog({
   open,
   onClose,

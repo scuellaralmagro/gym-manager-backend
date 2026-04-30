@@ -31,8 +31,6 @@ import type {
   MiReserva,
 } from "../../types/cliente";
 
-// Pantalla de CALENDARIO del cliente
-
 const locales = { es };
 const localizer = dateFnsLocalizer({
   format,
@@ -61,7 +59,9 @@ const RBC_MESSAGES = {
 // Constante para el valor "Todos" de los selectores
 const FILTER_ALL = "__ALL__";
 
-// Tipo de evento que consume React Big Calendar (la librería que usamos para el calendario)
+/**
+ * Evento adaptado al formato que consume React Big Calendar.
+ */
 type CalendarEvento = {
   id_clase: number;
   title: string;
@@ -77,20 +77,27 @@ type CalendarEvento = {
   yaEmpezada: boolean;
 };
 
-// Parsea yyyy-mm-dd + HH:mm[:ss] a Date en zona local
+/**
+ * Parsea fecha y hora de Laravel a `Date` local.
+ */
 function parseClaseFecha(fecha: string, hora: string): Date {
   const [y, m, d] = fecha.split("-").map(Number);
   const [hh, mm] = hora.split(":").map(Number);
   return new Date(y, m - 1, d, hh ?? 0, mm ?? 0, 0, 0);
 }
 
+/**
+ * Carga clases disponibles para el calendario del cliente.
+ */
 async function fetchClases(): Promise<ClienteClase[]> {
-  const { data } = await api.get<CollectionResponse<ClienteClase>>(
-    "/api/clases",
-  );
+  const { data } =
+    await api.get<CollectionResponse<ClienteClase>>("/api/clases");
   return data.data;
 }
 
+/**
+ * Carga reservas del cliente para marcar eventos ya reservados.
+ */
 async function fetchMisReservas(): Promise<MiReserva[]> {
   const { data } = await api.get<CollectionResponse<MiReserva>>(
     "/api/reservas/mis-reservas",
@@ -98,6 +105,14 @@ async function fetchMisReservas(): Promise<MiReserva[]> {
   return data.data;
 }
 
+/**
+ * Calendario interactivo de clases del cliente.
+ *
+ * @remarks
+ * Maneja filtros de actividad/entrenador, vista y fecha actual del calendario.
+ * TanStack Query llama a `GET /api/clases` y `GET /api/reservas/mis-reservas`.
+ * Las mutaciones reservan y cancelan con actualización optimista de caché.
+ */
 export default function ClientCalendar() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -158,7 +173,8 @@ export default function ClientCalendar() {
     const lista = rawClases ?? [];
     return lista
       .filter(
-        (c) => actividadFiltro === FILTER_ALL || c.actividad === actividadFiltro,
+        (c) =>
+          actividadFiltro === FILTER_ALL || c.actividad === actividadFiltro,
       )
       .filter((c) => {
         if (entrenadorFiltro === FILTER_ALL) return true;
@@ -382,8 +398,10 @@ export default function ClientCalendar() {
   // Colorea el fondo del evento según su estado
   const eventPropGetter = useCallback((event: CalendarEvento) => {
     let bg = "#1b61c9"; // disponible (azul primario)
-    if (event.yaReservada) bg = "#1e7e34"; // verde
-    else if (event.plazas_disponibles === 0) bg = "#b3261e"; // rojo
+    if (event.yaReservada)
+      bg = "#1e7e34"; // verde
+    else if (event.plazas_disponibles === 0)
+      bg = "#b3261e"; // rojo
     else if (event.yaEmpezada) bg = "#94a3b8"; // gris
     return {
       style: {
@@ -490,16 +508,14 @@ export default function ClientCalendar() {
                     onCancelar={handleCancelar}
                     reservandoId={
                       reservarMutation.isPending
-                        ? (reservarMutation.variables as
-                            | number
-                            | undefined) ?? null
+                        ? ((reservarMutation.variables as number | undefined) ??
+                          null)
                         : null
                     }
                     cancelandoId={
                       cancelarMutation.isPending
-                        ? (cancelarMutation.variables as
-                            | number
-                            | undefined) ?? null
+                        ? ((cancelarMutation.variables as number | undefined) ??
+                          null)
                         : null
                     }
                   />
@@ -514,10 +530,13 @@ export default function ClientCalendar() {
   );
 }
 
-// TODO: Arreglar tamaño de tarjeta de evento (ahora mismo si el evento es muy corto, los botones no se ven bien)
-
-// Tarjeta personalizada dentro de cada evento del calendario. Muestra
-// actividad, ratio de plazas y el CTA contextual.
+/**
+ * Tarjeta personalizada dentro de cada evento del calendario.
+ *
+ * @remarks
+ * Muestra actividad, ratio de plazas y el botón contextual de reservar o
+ * cancelar. En eventos muy cortos el calendario puede recortar contenido.
+ */
 function EventCard({
   event,
   onReservar,

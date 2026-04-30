@@ -1,12 +1,8 @@
 import { create } from "zustand";
 
-// Usamos Zustand (una librería de estado para React) para guardar el estado de la autenticación y el usuario autenticado.
-
-// Interfaces para guardar el estado de la autenticación y el usuario autenticado.
-// AuthUser: información del usuario autenticado.
-// AuthState: estado de la autenticación.
-// useAuthStore: hook para acceder al estado de la autenticación y el usuario autenticado.
-
+/**
+ * Usuario autenticado que se guarda en el store global.
+ */
 export type AuthUser = {
   id: number;
   nombre: string;
@@ -16,6 +12,13 @@ export type AuthUser = {
   id_rol: number;
 };
 
+/**
+ * Estado global de autenticación de la app.
+ *
+ * @remarks
+ * Maneja el usuario activo, si hay sesión iniciada, el login, la actualización
+ * parcial de perfil y el logout.
+ */
 type AuthState = {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -24,6 +27,9 @@ type AuthState = {
   logout: () => void;
 };
 
+/**
+ * Hook Zustand (libreria para gestion de estados) para leer y modificar la sesión del usuario.
+ */
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,

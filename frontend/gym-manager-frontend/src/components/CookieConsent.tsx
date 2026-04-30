@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "./ui/button";
 
@@ -8,13 +8,11 @@ import { Button } from "./ui/button";
 export const COOKIE_CONSENT_STORAGE_KEY = "gym_manager_cookie_consent";
 
 export default function CookieConsent() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
     const stored = window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY);
-    if (!stored) setVisible(true);
-  }, []);
+    return !stored;
+  });
 
   // Funcion para aceptar las cookies
   const handleAccept = () => {

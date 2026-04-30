@@ -35,11 +35,11 @@ import {
 import UserCreateDialog from "./UserCreateDialog";
 import UserEditDialog from "./UserEditDialog";
 
-// Pantalla GESTION DE USUARIOS (admin)
-
 const DEFAULT_PER_PAGE = 10; // Número de usuarios por página
 
-// Debounce: evita un exceso de petciones a la API añadiendo un delay de 300ms
+/**
+ * Retrasa el texto de búsqueda para reducir llamadas a la API.
+ */
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -56,6 +56,11 @@ type UsuariosQueryParams = {
   idRol: number | null;
 };
 
+/**
+ * Obtiene usuarios paginados para la tabla de administración.
+ *
+ * @param params - Página, tamaño, búsqueda y rol seleccionado.
+ */
 async function fetchUsuarios({
   page,
   perPage,
@@ -76,6 +81,14 @@ async function fetchUsuarios({
   return data;
 }
 
+/**
+ * Pantalla de gestión de usuarios.
+ *
+ * @remarks
+ * Maneja filtros (`page`, `search`, `idRol`) y modales (`editing`, `creating`).
+ * TanStack Query llama a `GET /api/admin/usuarios`; el borrado usa
+ * `DELETE /api/admin/usuarios/{id}` e invalida el listado.
+ */
 export default function UserManagement() {
   const queryClient = useQueryClient();
   const toast = useToast();

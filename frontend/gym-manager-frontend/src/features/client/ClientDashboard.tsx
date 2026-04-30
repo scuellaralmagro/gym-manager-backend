@@ -22,8 +22,6 @@ import type {
   MiReserva,
 } from "../../types/cliente";
 
-// Pantalla de INICIO del cliente (landing tras login).
-
 function parseClaseInicio(fecha: string, horaInicio: string): number {
   const [y, m, d] = fecha.split("-").map(Number);
   const [hh, mm] = horaInicio.split(":").map(Number);
@@ -50,13 +48,18 @@ function todayIso(): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Carga la oferta de clases visible para el cliente.
+ */
 async function fetchClases(): Promise<ClienteClase[]> {
-  const { data } = await api.get<CollectionResponse<ClienteClase>>(
-    "/api/clases",
-  );
+  const { data } =
+    await api.get<CollectionResponse<ClienteClase>>("/api/clases");
   return data.data;
 }
 
+/**
+ * Carga las reservas del cliente autenticado.
+ */
 async function fetchMisReservas(): Promise<MiReserva[]> {
   const { data } = await api.get<CollectionResponse<MiReserva>>(
     "/api/reservas/mis-reservas",
@@ -64,6 +67,15 @@ async function fetchMisReservas(): Promise<MiReserva[]> {
   return data.data;
 }
 
+/**
+ * Pantalla inicial del cliente.
+ *
+ * @remarks
+ * Lee el usuario desde Zustand y mantiene estado derivado con `useMemo` para
+ * próxima reserva, clases de hoy e ids ya reservados. Las peticiones se hacen con `GET` sobre
+ * `/api/clases` y `/api/reservas/mis-reservas`. Las modificaciones se hacen con `POST` sobre
+ * `/api/reservas` y `PATCH` sobre `/api/reservas/{id}/cancelar`.
+ */
 export default function ClientDashboard() {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
@@ -192,8 +204,8 @@ export default function ClientDashboard() {
         <Card className="border-[#f5c6c3] bg-[#fdecea]">
           <CardContent className="pt-5">
             <p className="text-sm text-[#b3261e]">
-              No se pudo cargar tu información. Revisa tu conexión e
-              inténtalo de nuevo.
+              No se pudo cargar tu información. Revisa tu conexión e inténtalo
+              de nuevo.
             </p>
             <button
               type="button"
@@ -233,8 +245,8 @@ export default function ClientDashboard() {
                   onReservar={(idClase) => reservarMutation.mutate(idClase)}
                   reservandoId={
                     reservarMutation.isPending
-                      ? (reservarMutation.variables as number | undefined) ??
-                        null
+                      ? ((reservarMutation.variables as number | undefined) ??
+                        null)
                       : null
                   }
                 />
@@ -256,8 +268,6 @@ export default function ClientDashboard() {
   );
 }
 
-// Sección "Tu Próxima Clase"
-
 type ProximaClaseCardProps = {
   reserva: MiReserva | null;
   loading: boolean;
@@ -265,6 +275,9 @@ type ProximaClaseCardProps = {
   cancelando: boolean;
 };
 
+/**
+ * Tarjeta resumen de la próxima reserva activa del cliente.
+ */
 function ProximaClaseCard({
   reserva,
   loading,
@@ -313,9 +326,7 @@ function ProximaClaseCard({
     <Card className="border-[#c9dcf5] bg-gradient-to-br from-white to-[#f3f7fd]">
       <CardHeader>
         <CardTitle className="text-[#1b61c9]">Tu próxima clase</CardTitle>
-        <CardDescription>
-          Reserva #{reserva.id_reserva}
-        </CardDescription>
+        <CardDescription>Reserva #{reserva.id_reserva}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1">
@@ -363,8 +374,6 @@ function MetaItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Sección "Calendario Rápido (Hoy)"
-
 type ClasesHoyListaProps = {
   clases: ClienteClase[];
   loading: boolean;
@@ -374,6 +383,9 @@ type ClasesHoyListaProps = {
   reservandoId: number | null;
 };
 
+/**
+ * Lista rápida de clases programadas para el día actual.
+ */
 function ClasesHoyLista({
   clases,
   loading,
@@ -414,8 +426,7 @@ function ClasesHoyLista({
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-semibold text-[#0d1220]">
-                {formatHoraCorta(clase.hora_inicio)} ·{" "}
-                {clase.actividad}
+                {formatHoraCorta(clase.hora_inicio)} · {clase.actividad}
               </span>
               <span className="text-xs text-[rgba(4,14,32,0.55)]">
                 {clase.sala.nombre} ·{" "}
