@@ -1,240 +1,201 @@
-# Gym Manager — Backend (API REST)
+# Gym Manager — API (Backend)
 
-Backend del proyecto **Gym Manager**, desarrollado con **Laravel 12** y **PostgreSQL 17**.
+API REST del proyecto **Gym Manager**, desarrollada en **Laravel 12** con base de datos **PostgreSQL 17** y autenticación mediante **Laravel Sanctum** (Personal Access Tokens).
 
-API RESTful stateless que gestiona la operativa de un gimnasio: autenticación por tokens, reservas de clases con control de aforo concurrente, panel de entrenador y administración con informes.
-
-Este módulo forma parte del Trabajo de Fin de Grado del ciclo de **Desarrollo de Aplicaciones Web (DAW)** de Sergio Cuéllar Almagro.
+Este módulo forma parte del Trabajo de Fin de Grado del ciclo **Desarrollo de Aplicaciones Web (DAW)** de Sergio Cuéllar Almagro.
 
 ---
 
 ## Tabla de contenidos
 
-- [Requisitos previos](#requisitos-previos)
-- [Puesta en marcha con Docker (recomendado)](#puesta-en-marcha-con-docker-recomendado)
-- [Puesta en marcha sin Docker (alternativa)](#puesta-en-marcha-sin-docker-alternativa)
-- [Poblar la base de datos (Seeding)](#poblar-la-base-de-datos-seeding)
-- [Arquitectura de la API](#arquitectura-de-la-api)
-- [Mapa de endpoints](#mapa-de-endpoints)
-- [Esquema de base de datos](#esquema-de-base-de-datos)
-- [Autenticación](#autenticación)
-- [Sistema de roles y middlewares](#sistema-de-roles-y-middlewares)
-- [KPIs e informes](#kpis-e-informes)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Variables de entorno](#variables-de-entorno)
+- [Stack tecnológico](#stack-tecnológico)
+- [Arquitectura](#arquitectura)
+- [Puesta en marcha con Docker](#puesta-en-marcha-con-docker)
+- [Puesta en marcha sin Docker](#puesta-en-marcha-sin-docker)
+- [Migraciones y seeders](#migraciones-y-seeders)
+- [Credenciales de prueba](#credenciales-de-prueba)
+- [Documentación de la API (Scramble)](#documentación-de-la-api-scramble)
 - [Comandos útiles](#comandos-útiles)
-- [Documentación de la API (OpenAPI)](#documentación-de-la-api-openapi)
-- [Tecnologías utilizadas](#tecnologías-utilizadas)
+- [Estructura del proyecto](#estructura-del-proyecto)
 
 ---
 
-## Requisitos previos
+## Stack tecnológico
 
-### Con Docker (recomendado)
+| Tecnología      | Versión  | Uso                                              |
+| --------------- | -------- | ------------------------------------------------ |
+| **Laravel**     | 12.x     | Framework PHP para construir la API REST         |
+| **PHP**         | 8.2+     | Lenguaje del backend                             |
+| **PostgreSQL**  | 17       | Base de datos relacional                         |
+| **Sanctum**     | 4.x      | Autenticación stateless vía tokens Bearer        |
+| **Scramble**    | 0.13.x   | Generación automática de la documentación OpenAPI |
+| **Docker**      | —        | Contenedores para la aplicación y la base de datos |
+| **Composer**    | 2.x      | Gestor de dependencias de PHP                    |
+
+---
+
+## Arquitectura
+
+La API sigue un diseño **stateless REST**: no hay sesiones en servidor, ni cookies de estado. Cada petición autenticada se identifica mediante un token de Sanctum enviado en la cabecera:
+
+```
+Authorization: Bearer <token>
+```
+
+El código está separado en capas bien definidas para que sea fácil de entender y mantener:
+
+| Capa            | Carpeta                        | Responsabilidad                                                   |
+| --------------- | ------------------------------ | ----------------------------------------------------------------- |
+| Rutas           | `routes/api.php`               | Define los endpoints y aplica los middlewares de auth y rol.      |
+| Controladores   | `app/Http/Controllers/`        | Orquestan la lógica de cada endpoint.                             |
+| FormRequests    | `app/Http/Requests/`           | Validan los datos de entrada fuera del controlador.               |
+| API Resources   | `app/Http/Resources/`          | Transforman los modelos a JSON (filtran campos sensibles).        |
+| Middleware      | `app/Http/Middleware/CheckRole.php` | Control de acceso por rol (admin / entrenador / cliente).   |
+| Modelos         | `app/Models/`                  | Representación Eloquent de las 6 tablas del dominio.              |
+
+Los roles (`role:admin`, `role:entrenador`, `role:cliente`) se aplican como middlewares; si el usuario autenticado no tiene el rol requerido, la API devuelve **403 Forbidden**.
+
+---
+
+## Puesta en marcha con Docker
+
+Es la forma recomendada, ya que no hace falta instalar PHP ni PostgreSQL en el equipo.
+
+### Requisitos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y en ejecución.
 
-> Es la forma más sencilla de levantar el proyecto, ya que no hace falta instalar PHP, Composer ni PostgreSQL en local. El entorno de Docker incluye volúmenes anónimos y montajes locales que facilitan el desarrollo continuo (live-reload).
+### Pasos
 
-### Sin Docker (alternativa)
-
-- PHP >= 8.2 (con las extensiones `pdo_pgsql` y `pgsql` habilitadas)
-- [Composer](https://getcomposer.org/)
-- [PostgreSQL](https://www.postgresql.org/) >= 15
-
----
-
-## Puesta en marcha con Docker (recomendado)
-
-### 1. Levantar los contenedores
-
-Abre una terminal en esta carpeta (`backend`) y ejecuta:
+Desde la carpeta `backend/`, ejecuta:
 
 ```bash
-docker compose up --build -d
+docker-compose up -d
 ```
 
-Este comando construye la imagen del backend y levanta dos contenedores. Durante su arranque automático inicial, un script (`docker-entrypoint.sh`) instalará las dependencias de PHP, generará la clave de la aplicación y ejecutará las migraciones.
+La primera vez, la imagen se construye sola; el `docker-entrypoint.sh` instala las dependencias de Composer, genera la `APP_KEY` y ejecuta las migraciones automáticamente.
 
-| Contenedor          | Descripción                        | Puerto                             |
-| ------------------- | ---------------------------------- | ---------------------------------- |
-| `gym_manager_app`   | Aplicación Laravel (API)           | `localhost:8000`                   |
-| `gym_manager_pgsql` | Base de datos PostgreSQL 17        | `localhost:5433`                   |
+Se levantan dos contenedores:
 
-> El contenedor de la app sincroniza tu código en tiempo real (bind mount). Cualquier archivo PHP que modifiques se reflejará al instante sin necesidad de reconstruir el contenedor.
+| Contenedor          | Descripción             | Puerto expuesto       |
+| ------------------- | ----------------------- | --------------------- |
+| `gym_manager_app`   | Aplicación Laravel      | `http://localhost:8000` |
+| `gym_manager_pgsql` | PostgreSQL 17           | `localhost:5433`      |
 
-### 2. ¡Listo!
+Para cargar los datos de ejemplo (seeders), ejecuta:
 
-La API debería estar funcionando en: **http://localhost:8000**
+```bash
+docker-compose exec app php artisan db:seed
+```
+
+> Los bind mounts del `docker-compose.yml` hacen live-reload: cualquier cambio en el código PHP se refleja al instante sin reconstruir el contenedor.
 
 ---
 
-## Puesta en marcha sin Docker (alternativa)
+## Puesta en marcha sin Docker
 
-> **Importante:** Si usas XAMPP u otra distribución de PHP en Windows, asegúrate de que las extensiones `pdo_pgsql` y `pgsql` están habilitadas en tu `php.ini`. Para ello, busca las líneas `;extension=pdo_pgsql` y `;extension=pgsql` y elimina el punto y coma del principio.
+### Requisitos
 
-### 1. Instalar dependencias de PHP
+- PHP 8.2 o superior, con las extensiones `pdo_pgsql` y `pgsql` habilitadas.
+- Composer 2.x
+- PostgreSQL 15 o superior (16/17 recomendado).
+
+### Pasos
+
+1. Instalar dependencias:
 
 ```bash
 composer install
 ```
 
-### 2. Verificar la base de datos en el archivo `.env`
-
-El archivo `.env` ya viene incluido en el proyecto. Solo asegúrate de que la configuración de base de datos local es correcta para tu entorno. Ejemplo:
+2. Copiar el archivo `.env.example` a `.env` y ajustar las variables de base de datos si fuera necesario:
 
 ```dotenv
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
-DB_PORT=5433
+DB_PORT=5432
 DB_DATABASE=gym_manager_db
 DB_USERNAME=gym_manager_admin
 DB_PASSWORD=supersecurepassword
 ```
 
-### 3. Crear la base de datos
+3. Generar la clave de la aplicación:
 
-Acceder a PostgreSQL y crear la base de datos y el usuario:
+```bash
+php artisan key:generate
+```
+
+4. Crear la base de datos en PostgreSQL:
 
 ```sql
 CREATE USER gym_manager_admin WITH PASSWORD 'supersecurepassword';
 CREATE DATABASE gym_manager_db OWNER gym_manager_admin;
 ```
 
-### 4. Ejecutar las migraciones
+5. Ejecutar migraciones y seeders:
 
 ```bash
-php artisan migrate
+php artisan migrate --seed
 ```
 
-### 5. Arrancar los servidores de desarrollo
-
-Arranca el servidor local de PHP:
+6. Arrancar el servidor de desarrollo:
 
 ```bash
 php artisan serve
 ```
 
-La API estará disponible en: **http://localhost:8000**
+La API queda disponible en `http://localhost:8000`.
 
 ---
 
-## Poblar la base de datos (Seeding)
+## Migraciones y seeders
 
-El proyecto incluye seeders con datos de ejemplo para desarrollo. Se ejecutan en orden jerárquico estricto para respetar las claves foráneas:
+Los seeders se ejecutan por fases para respetar las claves foráneas:
+
+| Fase | Seeder            | Datos                                                |
+| ---- | ----------------- | ---------------------------------------------------- |
+| 1    | `RolSeeder`       | Administrador, Entrenador, Cliente                   |
+| 1    | `SalaSeeder`      | 5 salas con capacidades de 12 a 30                   |
+| 1    | `ActividadSeeder` | Yoga, Pilates, Ciclo Indoor, Cross-Training, Zumba   |
+| 2    | `UsuarioSeeder`   | 1 admin + 2 entrenadores + 4 clientes                |
+| 3    | `ClaseSeeder`     | 6 sesiones repartidas entre los entrenadores          |
+| 4    | `ReservaSeeder`   | 8 reservas (activas y canceladas)                     |
+
+Con Docker:
 
 ```bash
-php artisan db:seed
+docker-compose exec app php artisan migrate --seed
 ```
 
-| Fase | Seeder            | Datos                                                   |
-| ---- | ----------------- | ------------------------------------------------------- |
-| 1    | RolSeeder         | Administrador, Entrenador, Cliente                      |
-| 1    | SalaSeeder        | 5 salas (capacidades de 12 a 30)                        |
-| 1    | ActividadSeeder   | Yoga, Pilates, Ciclo Indoor, Cross-Training, Zumba      |
-| 2    | UsuarioSeeder     | 1 admin + 2 entrenadores + 4 clientes                   |
-| 3    | ClaseSeeder       | 6 sesiones asignadas a entrenadores                      |
-| 4    | ReservaSeeder     | 8 reservas (activas y canceladas)                        |
+Sin Docker:
 
-> **Contraseña de desarrollo:** Todos los usuarios usan `Password1!` (hasheada con Bcrypt).
-
-### Credenciales de prueba
-
-| Rol           | Email                              | Contraseña    |
-| ------------- | ---------------------------------- | ------------- |
-| Administrador | `admin@gymmanager.com`             | `Password1!`  |
-| Entrenador    | `laura.entrenadora@gymmanager.com` | `Password1!`  |
-| Entrenador    | `miguel.entrenador@gymmanager.com` | `Password1!`  |
-| Cliente       | `ana.cliente@email.com`            | `Password1!`  |
-| Cliente       | `david.cliente@email.com`          | `Password1!`  |
-| Cliente       | `sara.cliente@email.com`           | `Password1!`  |
-| Cliente       | `jorge.cliente@email.com`          | `Password1!`  |
-
----
-
-## Arquitectura de la API
-
-La API opera de forma **completamente stateless**: sin sesiones de servidor ni cookies de estado. Toda la autenticación se realiza mediante tokens **Sanctum (Personal Access Tokens)** enviados en la cabecera `Authorization: Bearer <token>`.
-
-La lógica se organiza en capas desacopladas:
-
-- **Form Requests** (`app/Http/Requests/`) — Validación formal de entrada, separada de los controladores.
-- **Controllers** (`app/Http/Controllers/`) — Orquestación de la lógica de negocio.
-- **API Resources** (`app/Http/Resources/`) — Transformación segura de la salida a JSON (ocultación de campos sensibles, formateo ISO-8601).
-- **Middleware** (`app/Http/Middleware/`) — Control de acceso por roles.
-
----
-
-## Mapa de endpoints
-
-### Autenticación
-
-| Método | Ruta              | Controlador               | Middlewares               |
-| ------ | ----------------- | ------------------------- | ------------------------- |
-| POST   | `/api/login`      | AuthController@login      | guest, throttle:login     |
-| POST   | `/api/logout`     | AuthController@logout     | auth:sanctum              |
-
-### Compartidos (cualquier usuario autenticado)
-
-| Método | Ruta              | Controlador               | Middlewares               |
-| ------ | ----------------- | ------------------------- | ------------------------- |
-| GET    | `/api/perfil`     | UserController@profile    | auth:sanctum              |
-| GET    | `/api/clases`     | ClassController@index     | auth:sanctum              |
-
-### Cliente
-
-| Método | Ruta                                | Controlador                          | Middlewares                |
-| ------ | ----------------------------------- | ------------------------------------ | -------------------------- |
-| POST   | `/api/reservas`                     | ReservationController@store          | auth:sanctum, role:cliente |
-| GET    | `/api/reservas/mis-reservas`        | ReservationController@myReservations | auth:sanctum, role:cliente |
-| PATCH  | `/api/reservas/{id}/cancelar`       | ReservationController@cancel         | auth:sanctum, role:cliente |
-
-### Entrenador
-
-| Método | Ruta                              | Controlador                  | Middlewares                      |
-| ------ | --------------------------------- | ---------------------------- | -------------------------------- |
-| GET    | `/api/entrenador/agenda`          | TrainerController@agenda     | auth:sanctum, role:entrenador    |
-| GET    | `/api/clases/{id}/asistencia`     | TrainerController@attendance | auth:sanctum, role:entrenador    |
-
-### Administrador
-
-| Método | Ruta                                      | Controlador                              | Middlewares              |
-| ------ | ----------------------------------------- | ---------------------------------------- | ------------------------ |
-| POST   | `/api/admin/clases`                       | AdminClassController@store               | auth:sanctum, role:admin |
-| PUT    | `/api/admin/clases/{id}`                  | AdminClassController@update              | auth:sanctum, role:admin |
-| DELETE | `/api/admin/clases/{id}`                  | AdminClassController@destroy             | auth:sanctum, role:admin |
-| PUT    | `/api/admin/usuarios/{id}/rol`            | AdminUserController@updateRole           | auth:sanctum, role:admin |
-| GET    | `/api/admin/informes`                     | ReportController@kpis                    | auth:sanctum, role:admin |
-| GET    | `/api/admin/reservas`                     | AdminOverviewController@reservas         | auth:sanctum, role:admin |
-| GET    | `/api/admin/clases`                       | AdminOverviewController@clases           | auth:sanctum, role:admin |
-| GET    | `/api/admin/usuarios`                     | AdminOverviewController@usuarios         | auth:sanctum, role:admin |
-| PATCH  | `/api/admin/reservas/{id}/cancelar`       | AdminOverviewController@cancelarReserva  | auth:sanctum, role:admin |
-
----
-
-## Esquema de base de datos
-
-6 entidades con relaciones de integridad referencial:
-
+```bash
+php artisan migrate --seed
 ```
-ROLES (id_rol PK, nombre UNIQUE)
-  └── USUARIOS (id_usuario PK, nombre, apellidos, email UNIQUE, telefono?, hash_password, id_rol FK → RESTRICT)
-        ├── CLASES (id_clase PK, fecha, hora_inicio, hora_fin, cupo_maximo,
-        │           id_sala FK → RESTRICT, id_usuario FK → RESTRICT, id_actividad FK → CASCADE)
-        └── RESERVAS (id_reserva PK, fecha_creacion, estado, id_usuario FK → CASCADE, id_clase FK → CASCADE)
-                      UNIQUE(id_usuario, id_clase)
 
-SALAS (id_sala PK, nombre, capacidad_max)
-ACTIVIDADES (id_actividad PK, nombre, descripcion)
+Para un reseteo completo (borra todo y vuelve a sembrar):
+
+```bash
+php artisan migrate:fresh --seed
 ```
 
 ---
 
-## Autenticación
+## Credenciales de prueba
 
-Basada en **Laravel Sanctum** con Personal Access Tokens (PAT).
+Todos los usuarios creados por los seeders usan la misma contraseña: `Password1!` (almacenada con Bcrypt).
 
-**Login:** `POST /api/login` con `email` y `password`. Devuelve un token Bearer.
+| Rol           | Email                              | Contraseña   |
+| ------------- | ---------------------------------- | ------------ |
+| Administrador | `admin@gymmanager.com`             | `Password1!` |
+| Entrenador    | `laura.entrenadora@gymmanager.com` | `Password1!` |
+| Entrenador    | `miguel.entrenador@gymmanager.com` | `Password1!` |
+| Cliente       | `ana.cliente@email.com`            | `Password1!` |
+| Cliente       | `david.cliente@email.com`          | `Password1!` |
+| Cliente       | `sara.cliente@email.com`           | `Password1!` |
+| Cliente       | `jorge.cliente@email.com`          | `Password1!` |
+
+Ejemplo de login con `curl`:
 
 ```bash
 curl -X POST http://localhost:8000/api/login \
@@ -242,65 +203,56 @@ curl -X POST http://localhost:8000/api/login \
   -d '{"email": "admin@gymmanager.com", "password": "Password1!"}'
 ```
 
-**Usar el token:** Incluir en todas las peticiones autenticadas:
-
-```
-Authorization: Bearer <token>
-```
-
-**Logout:** `POST /api/logout` revoca el token actual.
-
-**Protección anti fuerza bruta:** El endpoint de login está limitado a 5 intentos por minuto por combinación de IP + email.
+El endpoint devuelve un token Bearer que hay que incluir en las cabeceras del resto de peticiones autenticadas.
 
 ---
 
-## Sistema de roles y middlewares
+## Documentación de la API (Scramble)
 
-Se usa un middleware personalizado `CheckRole` registrado como alias `role` en `bootstrap/app.php`.
+La documentación OpenAPI se genera **automáticamente** con [Scramble](https://scramble.dedoc.co/) a partir de:
 
-| Alias en ruta    | Valor en BD      | Descripción                        |
-| ---------------- | ---------------- | ---------------------------------- |
-| `role:admin`     | Administrador    | Gestión de clases, usuarios e informes |
-| `role:entrenador`| Entrenador       | Agenda y control de asistencia     |
-| `role:cliente`   | Cliente          | Reservas y consulta de mis reservas |
+- Los tipos de retorno de cada controlador.
+- Los FormRequests (reglas de validación).
+- Los bloques PHPDoc de los métodos públicos.
 
-Si el rol del usuario autenticado no coincide con el requerido, se devuelve un **403 Forbidden**.
+Con la API corriendo, la documentación queda disponible en:
+
+| Recurso                         | URL                                          |
+| ------------------------------- | -------------------------------------------- |
+| Visor interactivo (Scramble UI) | `http://localhost:8000/docs/api`             |
+| Especificación OpenAPI JSON     | `http://localhost:8000/docs/api.json`        |
+
+Desde el visor se puede introducir el token Bearer (esquema `sanctum`) y probar los endpoints directamente sin herramientas externas.
+
+> En entornos distintos de `local` / `development`, el Gate `viewApiDocs` (definido en `AppServiceProvider`) bloquea el acceso a la documentación para que no quede expuesta públicamente en producción.
 
 ---
 
-## KPIs e informes
+## Comandos útiles
 
-El endpoint `GET /api/admin/informes` calcula y devuelve los indicadores clave de rendimiento del gimnasio. Todos los KPIs respetan los filtros opcionales `mes`, `anio` y `actividad` vía query string.
-
-### KPIs principales
-
-| KPI | Tipo | Descripción |
-| --- | ---- | ----------- |
-| `tasa_ocupacion_promedio` | `float` | Porcentaje de plazas ocupadas sobre el cupo total ofertado |
-| `indice_cancelaciones` | `float` | Porcentaje de reservas canceladas sobre el total de reservas |
-| `media_reservas_por_clase` | `float` | Promedio de reservas activas por cada clase programada |
-| `clientes_unicos` | `int` | Número de clientes distintos con al menos una reserva activa |
-| `actividad_mas_popular` | `object\|null` | Nombre de la actividad con más reservas activas y su recuento |
-| `hora_punta` | `object\|null` | Franja horaria con mayor demanda (hora de inicio y recuento) |
-
-### Desglose
-
-| Campo | Descripción |
-| ----- | ----------- |
-| `total_clases` | Número de clases programadas en el periodo |
-| `cupo_total` | Suma de plazas ofertadas |
-| `reservas_activas` | Reservas en estado "Activa" |
-| `reservas_canceladas` | Reservas en estado "Cancelada" |
-| `total_reservas` | Suma de activas + canceladas |
-
-### Ejemplo de petición
+### Docker
 
 ```bash
-curl http://localhost:8000/api/admin/informes?mes=4&anio=2026 \
-  -H "Authorization: Bearer <token>"
+docker-compose up -d                 # Levanta los contenedores en segundo plano
+docker-compose up --build -d         # Reconstruye tras cambios en Dockerfile/Composer
+docker-compose down                  # Para los contenedores
+docker-compose down -v               # Para y borra los volúmenes (elimina la BBDD)
+docker-compose logs app -f           # Sigue los logs de la aplicación
+docker-compose exec app bash         # Abre un shell dentro del contenedor
+docker-compose exec app php artisan <comando>   # Ejecuta cualquier comando artisan
 ```
 
-> Todos los cálculos incluyen protección contra divisiones por cero, devolviendo `0` o `null` cuando no hay datos.
+### Artisan (dentro o fuera de Docker)
+
+```bash
+php artisan migrate                   # Ejecuta migraciones
+php artisan migrate --seed            # Migra y siembra datos de ejemplo
+php artisan migrate:fresh --seed      # Reseteo completo de la BBDD
+php artisan db:seed                   # Solo seeders
+php artisan route:list                # Lista todas las rutas registradas
+php artisan config:clear              # Limpia la caché de configuración
+php artisan test                      # Ejecuta los tests de PHPUnit
+```
 
 ---
 
@@ -310,170 +262,27 @@ curl http://localhost:8000/api/admin/informes?mes=4&anio=2026 \
 backend/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── AuthController.php          # Login / Logout
-│   │   │   ├── UserController.php          # Perfil del usuario
-│   │   │   ├── ClassController.php         # Listado de clases (con plazas)
-│   │   │   ├── ReservationController.php   # Crear / Cancelar reserva / Mis reservas
-│   │   │   ├── TrainerController.php       # Agenda / Asistencia
-│   │   │   ├── AdminClassController.php    # CRUD de clases (admin)
-│   │   │   ├── AdminUserController.php     # Cambiar rol (admin)
-│   │   │   ├── AdminOverviewController.php # Vistas globales + cancelar reserva (admin)
-│   │   │   └── ReportController.php        # KPIs estadísticos (admin)
-│   │   ├── Middleware/
-│   │   │   └── CheckRole.php               # Middleware de control de roles
-│   │   ├── Requests/
-│   │   │   ├── LoginRequest.php
-│   │   │   ├── StoreReservationRequest.php
-│   │   │   ├── StoreClassRequest.php
-│   │   │   ├── UpdateClassRequest.php
-│   │   │   └── UpdateUserRoleRequest.php
-│   │   └── Resources/
-│   │       ├── ReservaResource.php
-│   │       ├── ClaseResource.php
-│   │       ├── AsistenciaResource.php
-│   │       ├── UsuarioResource.php
-│   │       ├── AdminReservaResource.php
-│   │       └── AdminClaseResource.php
-│   ├── Models/
-│   │   ├── Rol.php
-│   │   ├── Sala.php
-│   │   ├── Actividad.php
-│   │   ├── Usuario.php
-│   │   ├── Clase.php
-│   │   └── Reserva.php
-│   └── Providers/
-│       └── AppServiceProvider.php          # Rate limiter + Scramble config
+│   │   ├── Controllers/    # Lógica de cada endpoint (AuthController, ReservationController, etc.)
+│   │   ├── Middleware/     # CheckRole (control por rol)
+│   │   ├── Requests/       # FormRequests con las reglas de validación
+│   │   └── Resources/      # API Resources (formato JSON de salida)
+│   ├── Models/             # Rol, Sala, Actividad, Usuario, Clase, Reserva
+│   └── Providers/          # AppServiceProvider (rate-limit + Scramble)
 ├── bootstrap/
-│   └── app.php                             # Registro del middleware de roles
-├── config/
+│   └── app.php             # Registro del alias 'role' y middlewares globales
+├── config/                 # Configuración de Laravel (auth, database, sanctum, etc.)
 ├── database/
-│   ├── migrations/                         # 6 tablas + tokens + cache + jobs
-│   └── seeders/                            # Datos de ejemplo (7 seeders)
+│   ├── migrations/         # Migraciones de las 6 tablas + tokens/cache/jobs
+│   └── seeders/            # Datos de ejemplo en 4 fases
 ├── routes/
-│   └── api.php                             # Todas las rutas de la API
-├── docker-compose.yml
-├── Dockerfile
-├── docker-entrypoint.sh
-└── composer.json
+│   └── api.php             # Todas las rutas bajo /api
+├── docker-compose.yml      # Servicios Docker (app + pgsql)
+├── Dockerfile              # Imagen PHP-CLI con extensiones pgsql
+└── docker-entrypoint.sh    # Script de arranque del contenedor de la app
 ```
-
----
-
-## Variables de entorno
-
-Las variables más importantes del archivo `.env`:
-
-| Variable        | Descripción                                                 | Valor por defecto     |
-| --------------- | ----------------------------------------------------------- | --------------------- |
-| `APP_ENV`       | Entorno de la aplicación                                    | `local`               |
-| `APP_DEBUG`     | Activar modo debug                                          | `true`                |
-| `APP_KEY`       | Clave de encriptación (se genera sola vía script en Docker) | —                     |
-| `DB_CONNECTION` | Driver de base de datos                                     | `pgsql`               |
-| `DB_HOST`       | Host de la base de datos                                    | `127.0.0.1`           |
-| `DB_PORT`       | Puerto de la base de datos                                  | `5433`                |
-| `DB_DATABASE`   | Nombre de la base de datos                                  | `gym_manager_db`      |
-| `DB_USERNAME`   | Usuario de la base de datos                                 | `gym_manager_admin`   |
-| `DB_PASSWORD`   | Contraseña de la base de datos                              | `supersecurepassword` |
-
-> **Cuando se usa Docker**, las variables de base de datos (`DB_HOST` y `DB_PORT`) las sobreescribe el `docker-compose.yml` para que apunten al contenedor (`pgsql:5432`), por lo que no hace falta modificarlas en el `.env`.
-
----
-
-## Comandos útiles
-
-### Docker
-
-```bash
-# Levantar los contenedores en segundo plano
-docker compose up -d
-
-# Levantar y reconstruir (después de cambios en configuraciones o dependencias)
-docker compose up --build -d
-
-# Parar los contenedores
-docker compose down
-
-# Parar y eliminar los volúmenes (borra la base de datos)
-docker compose down -v
-
-# Ver los logs de la aplicación en tiempo real
-docker compose logs app -f
-
-# Ver los logs de la base de datos
-docker compose logs pgsql -f
-
-# Ejecutar cualquier comando artisan dentro del contenedor
-docker compose exec app php artisan <comando>
-
-# Abrir una terminal dentro del contenedor de la app
-docker compose exec app bash
-
-# Abrir una consola de PostgreSQL
-docker compose exec pgsql psql -U gym_manager_admin -d gym_manager_db
-```
-
-### Sin Docker
-
-```bash
-# Ejecutar migraciones
-php artisan migrate
-
-# Ejecutar migraciones + seeders
-php artisan migrate --seed
-
-# Solo seeders (si las tablas ya existen)
-php artisan db:seed
-
-# Resetear BD completa (migrate:fresh + seed)
-php artisan migrate:fresh --seed
-
-# Revertir la última migración
-php artisan migrate:rollback
-
-# Limpiar cachés
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-
-# Listar todas las rutas registradas
-php artisan route:list
-
-# Ejecutar los tests
-php artisan test
-```
-
----
-
-## Tecnologías utilizadas
-
-| Tecnología     | Versión | Uso                                           |
-| -------------- | ------- | --------------------------------------------- |
-| **Laravel**    | 12.x    | Framework PHP para la API REST                |
-| **PHP**        | 8.3     | Lenguaje de programación del backend          |
-| **PostgreSQL** | 17      | Base de datos relacional                      |
-| **Sanctum**    | 4.x     | Autenticación stateless con tokens (PAT)      |
-| **Scramble**   | 0.13.x  | Documentación OpenAPI automática              |
-| **Docker**     | —       | Contenedorización del entorno de desarrollo   |
-| **Composer**   | 2.x     | Gestor de dependencias de PHP                 |
-
----
-
-## Documentación de la API (OpenAPI)
-
-La documentación se genera automáticamente gracias a [Scramble](https://scramble.dedoc.co/), que analiza los tipos de retorno, Form Requests y PHPDoc de cada controlador. Cada endpoint incluye bloques `/** ... */` con resumen y descripción que Scramble traduce a la especificación OpenAPI.
-
-| Recurso                 | URL                                           |
-| ----------------------- | --------------------------------------------- |
-| Visor interactivo       | `http://localhost:8000/docs/api`              |
-| Especificación JSON     | `http://localhost:8000/docs/api.json`         |
-
-El esquema de seguridad Bearer (Sanctum) ya está declarado en la spec, así que desde el visor se puede introducir el token y probar los endpoints directamente.
-
-> **Acceso restringido en producción:** Se ha configurado un Gate (`viewApiDocs`) en `AppServiceProvider` para que solo los administradores puedan acceder a la documentación cuando `APP_ENV=production`.
 
 ---
 
 ## Licencia
 
-Este proyecto ha sido desarrollado como Trabajo de Fin de Grado (TFG) para el ciclo formativo de **Desarrollo de Aplicaciones Web (DAW)**.
+Proyecto desarrollado como Trabajo de Fin de Grado del ciclo formativo **Desarrollo de Aplicaciones Web (DAW)**.

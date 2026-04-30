@@ -73,7 +73,16 @@ class UsuarioSeeder extends Seeder
         ];
 
         foreach ($usuarios as $usuario) {
-            Usuario::create($usuario);
+            Usuario::updateOrCreate(
+                ['email' => $usuario['email']],
+                [
+                    'nombre' => $usuario['nombre'],
+                    'apellidos' => $usuario['apellidos'],
+                    'telefono' => $usuario['telefono'],
+                    'hash_password' => $usuario['hash_password'],
+                    'id_rol' => $usuario['id_rol'],
+                ],
+            );
         }
     }
 }

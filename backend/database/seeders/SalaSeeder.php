@@ -18,7 +18,10 @@ class SalaSeeder extends Seeder
         ];
 
         foreach ($salas as $sala) {
-            Sala::create($sala);
+            Sala::updateOrCreate(
+                ['nombre' => $sala['nombre']],
+                ['capacidad_max' => $sala['capacidad_max']],
+            );
         }
     }
 }

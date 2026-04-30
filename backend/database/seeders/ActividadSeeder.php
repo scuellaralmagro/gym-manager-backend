@@ -18,7 +18,10 @@ class ActividadSeeder extends Seeder
         ];
 
         foreach ($actividades as $actividad) {
-            Actividad::create($actividad);
+            Actividad::updateOrCreate(
+                ['nombre' => $actividad['nombre']],
+                ['descripcion' => $actividad['descripcion']],
+            );
         }
     }
 }

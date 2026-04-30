@@ -1,5 +1,4 @@
 services:
-  # ── Laravel PHP Application ──────────────────────────────────
   app:
     build:
       context: .
@@ -9,10 +8,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # ── Live-reload bind mounts ──────────────────────────────
-      # Mount the entire project for live code sync
       - .:/var/www/html
-      # Preserve container-managed dirs (avoid host overwrite)
       - /var/www/html/vendor
       - /var/www/html/node_modules
     environment:
@@ -30,8 +26,6 @@ services:
         condition: service_healthy
     networks:
       - gym_manager_network
-
-  # ── PostgreSQL Database ──────────────────────────────────────
   pgsql:
     image: postgres:17-alpine
     container_name: gym_manager_pgsql
