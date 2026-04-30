@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 
 /**
- * Clave usada para guardar el token de autenticación del usuario en localStorage.
+ * Clave usada para guardar el token de autenticación del usuario.
  */
 export const AUTH_TOKEN_STORAGE_KEY = "gym-manager.authToken";
 
@@ -32,7 +32,7 @@ export function clearApiAuthToken(): void {
  * limpia la sesión de Zustand y redirige al login.
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000", // defaults to localhost if not set on .env
   withCredentials: true,
 });
 

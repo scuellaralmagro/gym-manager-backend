@@ -93,8 +93,8 @@ const DEFAULT_PER_PAGE = 10;
  * @remarks
  * Maneja estados de filtros (`page`, fechas, entrenador, ordenación) y modales
  * (`dialogClase`, `salasOpen`, `actividadesOpen`). TanStack Query consulta
- * `/api/admin/clases` y `/api/admin/entrenadores`; las mutaciones borran clases
- * con `DELETE /api/admin/clases/{id}` e invalidan los listados afectados.
+ * `/api/admin/clases` y `/api/admin/entrenadores`; las clases se borran
+ * con `DELETE /api/admin/clases/{id}`.
  */
 export default function ClassManagement() {
   const queryClient = useQueryClient();
@@ -473,7 +473,7 @@ export default function ClassManagement() {
 }
 
 /**
- * Encabezado de tabla que permite cambiar la ordenación.
+ * Encabezado de tabla ordenable según parámetros
  */
 function SortableHeader({
   label,

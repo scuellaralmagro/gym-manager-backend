@@ -111,7 +111,6 @@ async function fetchMisReservas(): Promise<MiReserva[]> {
  * @remarks
  * Maneja filtros de actividad/entrenador, vista y fecha actual del calendario.
  * TanStack Query llama a `GET /api/clases` y `GET /api/reservas/mis-reservas`.
- * Las mutaciones reservan y cancelan con actualización optimista de caché.
  */
 export default function ClientCalendar() {
   const queryClient = useQueryClient();
@@ -535,7 +534,9 @@ export default function ClientCalendar() {
  *
  * @remarks
  * Muestra actividad, ratio de plazas y el botón contextual de reservar o
- * cancelar. En eventos muy cortos el calendario puede recortar contenido.
+ * cancelar.
+ * 
+ * TODO: En eventos muy cortos, la tarjeta puede recortar contenido. Hay que arreglar.
  */
 function EventCard({
   event,

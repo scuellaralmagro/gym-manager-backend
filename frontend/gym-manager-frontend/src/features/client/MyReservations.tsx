@@ -56,8 +56,7 @@ async function fetchMisReservas(): Promise<MiReserva[]> {
  *
  * @remarks
  * Divide las reservas en próximas e historial con estado derivado por `useMemo`.
- * TanStack Query llama a `GET /api/reservas/mis-reservas`; la mutación de
- * cancelación usa `PATCH /api/reservas/{id}/cancelar` con actualización optimista.
+ * TanStack Query llama a `GET /api/reservas/mis-reservas`; la cancelación usa `PATCH /api/reservas/{id}/cancelar`.
  */
 export default function MyReservations() {
   const queryClient = useQueryClient();

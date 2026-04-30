@@ -51,7 +51,7 @@ type PerfilResponse = {
  *
  * @remarks
  * Maneja el formulario de email y contraseña con React Hook Form. Lanza
- * `GET /sanctum/csrf-cookie`, `POST /api/login` y `GET /api/perfil`; después
+ * `GET /sanctum/csrf-cookie` , `POST /api/login` y `GET /api/perfil`; después
  * guarda token y usuario en Zustand y redirige según el rol.
  */
 export default function Login() {

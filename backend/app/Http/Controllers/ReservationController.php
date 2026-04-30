@@ -25,10 +25,11 @@ class ReservationController extends Controller
      * Crear una reserva para el cliente autenticado.
      *
      * Pasos:
-     *  1. Evito duplicados: si ya tiene una reserva Activa para esa clase, 409.
-     *  2. Dentro de una transacción, bloqueo la fila de la clase con
+     *  1. Dentro de una transacción, bloqueo la fila de la clase con
      *     lockForUpdate para impedir un choque entre dos peticiones a la vez.
-     *  3. Si la clase ya ha empezado o no quedan plazas, 422.
+     *  2. Si el cliente ya tenía reserva Activa para esa clase, 409.
+     *  3. Si tenía una reserva Cancelada, se reactiva en vez de crear otra fila.
+     *  4. Si la clase ya ha empezado o no quedan plazas, 422.
      *
      * @param  \App\Http\Requests\StoreReservationRequest  $request  Contiene el id_clase validado.
      * @return \Illuminate\Http\JsonResponse                         Reserva creada (201), 409 si duplicada o 422 si no se puede reservar.
@@ -39,22 +40,22 @@ class ReservationController extends Controller
         $idUsuario = $request->user()->id_usuario;
         $idClase   = $request->validated('id_clase');
 
-        $duplicada = Reserva::where('id_usuario', $idUsuario)
-            ->where('id_clase', $idClase)
-            ->where('estado', 'Activa')
-            ->exists();
-
-        if ($duplicada) {
-            return response()->json([
-                'message' => 'Ya tienes una reserva activa para esta clase.',
-            ], 409);
-        }
-
         // lockForUpdate bloquea la fila de la clase mientras dura la transacción.
         // Así evitamos que dos reservas concurrentes superen el cupo.
         $reserva = DB::transaction(function () use ($idUsuario, $idClase) {
 
             $clase = Clase::lockForUpdate()->findOrFail($idClase);
+
+            $existente = Reserva::where('id_usuario', $idUsuario)
+                ->where('id_clase', $idClase)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existente?->estado === 'Activa') {
+                abort(response()->json([
+                    'message' => 'Ya tienes una reserva activa para esta clase.',
+                ], 409));
+            }
 
             $inicioClase = Carbon::parse($clase->fecha->format('Y-m-d') . ' ' . $clase->hora_inicio);
 
@@ -68,6 +69,11 @@ class ReservationController extends Controller
 
             if ($ocupacionActual >= $clase->cupo_maximo) {
                 abort(422, 'No quedan plazas disponibles en esta clase.');
+            }
+
+            if ($existente) {
+                $existente->update(['estado' => 'Activa']);
+                return $existente->fresh();
             }
 
             return Reserva::create([
