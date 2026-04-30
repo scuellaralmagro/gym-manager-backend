@@ -20,6 +20,10 @@ services:
         condition: service_healthy
     networks:
       - gym_manager_network
+    expose:
+      - 8000
+    volumes:
+      - .:/var/www/html
   pgsql:
     image: postgres:17-alpine
     container_name: gym_manager_pgsql
