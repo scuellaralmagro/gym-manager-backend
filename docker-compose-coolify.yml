@@ -9,6 +9,9 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       APP_KEY: "${APP_KEY}"
+      APP_URL: "http://jbevizdchicnoxtus7n1pbsi.91.99.4.85.sslip.io"
+      FRONTEND_URL: "http://x14e6e77glqc2xnf6180g3kr.91.99.4.85.sslip.io"
+      SESSION_DRIVER: file
       DB_CONNECTION: pgsql
       DB_HOST: pgsql
       DB_PORT: 5432
